@@ -1,6 +1,6 @@
 {
-    "name": "carenine",
-    "short_name": "carenine",
+    "name": "finapp",
+    "short_name": "finapp",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

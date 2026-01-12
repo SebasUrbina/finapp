@@ -166,4 +166,108 @@ class DashboardController extends StateNotifier<DashboardState> {
       return null;
     }
   }
+
+  /// Savings rate as percentage (0-100)
+  double get savingsRate {
+    if (totalIncome.cents == 0) return 0;
+    final savings = totalIncome.cents - totalExpenses.cents;
+    return (savings / totalIncome.cents * 100).clamp(0, 100);
+  }
+
+  /// Get spending trend data for the last 6 periods
+  List<SpendingTrendData> get spendingTrend {
+    final List<SpendingTrendData> trend = [];
+    final now = DateTime.now();
+
+    for (int i = 5; i >= 0; i--) {
+      DateTime periodStart;
+      DateTime periodEnd;
+      String label;
+
+      if (state.period == PeriodFilter.week) {
+        // Calculate week range
+        final targetDate = now.subtract(Duration(days: i * 7));
+        final weekday = targetDate.weekday;
+        final monday = targetDate.subtract(Duration(days: weekday - 1));
+        final sunday = monday.add(const Duration(days: 6));
+
+        periodStart = DateTime(monday.year, monday.month, monday.day);
+        periodEnd = DateTime(sunday.year, sunday.month, sunday.day, 23, 59, 59);
+
+        // Label: "W1", "W2", etc. or date range for current week
+        if (i == 0) {
+          label = 'Esta';
+        } else {
+          label = 'S-$i';
+        }
+      } else {
+        // Calculate month range
+        final targetDate = DateTime(now.year, now.month - i, 1);
+        periodStart = DateTime(targetDate.year, targetDate.month, 1);
+        periodEnd = DateTime(
+          targetDate.year,
+          targetDate.month + 1,
+          0,
+          23,
+          59,
+          59,
+        );
+
+        // Label: "Ene", "Feb", etc.
+        if (i == 0) {
+          label = 'Este';
+        } else {
+          final monthNames = [
+            'Ene',
+            'Feb',
+            'Mar',
+            'Abr',
+            'May',
+            'Jun',
+            'Jul',
+            'Ago',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dic',
+          ];
+          label = monthNames[targetDate.month - 1];
+        }
+      }
+
+      // Calculate expenses for this period
+      final periodTransactions = state.transactions.where((t) {
+        return t.type == TransactionType.expense &&
+            t.date.isAfter(periodStart.subtract(const Duration(seconds: 1))) &&
+            t.date.isBefore(periodEnd.add(const Duration(seconds: 1)));
+      });
+
+      final periodExpenses = periodTransactions.isEmpty
+          ? const Money(0)
+          : periodTransactions.map((t) => t.amount).reduce((a, b) => a + b);
+
+      trend.add(
+        SpendingTrendData(
+          label: label,
+          amount: periodExpenses,
+          isCurrentPeriod: i == 0,
+        ),
+      );
+    }
+
+    return trend;
+  }
+}
+
+/// Data class for spending trend
+class SpendingTrendData {
+  final String label;
+  final Money amount;
+  final bool isCurrentPeriod;
+
+  SpendingTrendData({
+    required this.label,
+    required this.amount,
+    required this.isCurrentPeriod,
+  });
 }

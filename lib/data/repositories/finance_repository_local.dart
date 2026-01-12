@@ -8,19 +8,20 @@ class FinanceRepositoryLocal implements FinanceRepository {
   // final LocalDataService _localDataService;
 
   @override
-  List<Account> getAccounts() => LocalDataService.accounts;
+  List<Account> getAccounts() => List.from(LocalDataService.accounts);
 
   @override
-  List<Transaction> getTransactions() => LocalDataService.transactions;
+  List<Transaction> getTransactions() =>
+      List.from(LocalDataService.transactions);
 
   @override
-  List<Category> getCategories() => LocalDataService.categories;
+  List<Category> getCategories() => List.from(LocalDataService.categories);
 
   @override
-  List<Tag> getTags() => LocalDataService.tags;
+  List<Tag> getTags() => List.from(LocalDataService.tags);
 
   @override
-  List<Budget> getBudgets() => LocalDataService.budgets;
+  List<Budget> getBudgets() => List.from(LocalDataService.budgets);
 
   @override
   Future<void> addTransaction(Transaction tx) async {

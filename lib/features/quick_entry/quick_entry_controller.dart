@@ -1,94 +1,55 @@
-import 'package:flutter/material.dart';
-import 'package:carenine/data/data.dart';
-import 'package:carenine/core/models/finance_models.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:finapp/domain/models/finance_models.dart';
+import 'package:finapp/data/providers/finance_providers.dart';
+import 'package:finapp/features/quick_entry/quick_entry_state.dart';
 
-class QuickEntryController extends ChangeNotifier {
-  final FinanceRepository repo;
+// Usamos AutoDisposeNotifier para que se dispare el dispose cuando el widget se desmonte
+// Recomendado siempre que el notifier tenga un estado que depende de providers
+class QuickEntryController extends AutoDisposeNotifier<QuickEntryState> {
+  @override
+  QuickEntryState build() {
+    final accounts = ref.watch(accountsProvider);
+    final categories = ref.watch(categoriesProvider);
 
-  QuickEntryController(this.repo) {
-    // Inicializar con primeros valores si existen
-    final accounts = repo.getAccounts();
-    if (accounts.isNotEmpty) selectedAccount = accounts.first;
-
-    final categories = repo.getCategories();
-    if (categories.isNotEmpty) selectedCategory = categories.first;
+    return QuickEntryState(
+      selectedAccount: accounts.isNotEmpty ? accounts.first : null,
+      selectedCategory: categories.isNotEmpty ? categories.first : null,
+    );
   }
 
-  // ===== Core =====
-  TransactionType type = TransactionType.expense;
-  bool isRecurring = false;
-  double amount = 0;
-  String description = '';
-
-  // ===== Accounts =====
-  Account? selectedAccount;
-
-  // ===== Categories =====
-  Category? selectedCategory;
-
-  // ===== Recurrence =====
-  RecurrenceFrequency frequency = RecurrenceFrequency.monthly;
-  int interval = 1;
-  int dayOfMonth = 1;
-
-  // ===== Data =====
-  List<Account> get accounts => repo.getAccounts();
-  List<Category> get categories => repo.getCategories();
-
-  bool get canSubmit =>
-      amount > 0 && selectedAccount != null && selectedCategory != null;
-
-  // ===== Mutations =====
-  void setAmount(double v) {
-    amount = v;
-    notifyListeners();
-  }
-
-  void setDescription(String v) {
-    description = v;
-    notifyListeners();
-  }
-
-  void setType(TransactionType t) {
-    type = t;
-    notifyListeners();
-  }
-
-  void setAccount(Account? a) {
-    selectedAccount = a;
-    notifyListeners();
-  }
-
-  void setCategory(Category? c) {
-    selectedCategory = c;
-    notifyListeners();
-  }
-
-  void toggleRecurring(bool v) {
-    isRecurring = v;
-    notifyListeners();
-  }
+  void setAmount(double v) => state = state.copyWith(amount: v);
+  void setDescription(String v) => state = state.copyWith(description: v);
+  void setType(TransactionType t) => state = state.copyWith(type: t);
+  void setAccount(Account? a) => state = state.copyWith(selectedAccount: a);
+  void setCategory(Category? c) => state = state.copyWith(selectedCategory: c);
+  void toggleRecurring(bool v) => state = state.copyWith(isRecurring: v);
 
   void setRecurrence(RecurrenceFrequency f, int i, int d) {
-    frequency = f;
-    interval = i;
-    dayOfMonth = d;
-    notifyListeners();
+    state = state.copyWith(frequency: f, interval: i, dayOfMonth: d);
   }
 
   Future<void> submit() async {
-    if (!canSubmit) return;
+    if (!state.canSubmit) return;
 
     final tx = Transaction(
       id: DateTime.now().toIso8601String(),
-      accountId: selectedAccount!.id,
-      categoryId: selectedCategory!.id,
-      amount: Money(amount.toInt()),
+      accountId: state.selectedAccount!.id,
+      categoryId: state.selectedCategory!.id,
+      amount: Money(state.amount.toInt()),
       date: DateTime.now(),
-      type: type,
-      description: description,
+      type: state.type,
+      description: state.description,
     );
 
-    await repo.addTransaction(tx);
+    await ref.read(financeRepositoryProvider).addTransaction(tx);
+
+    // Invalidamos para que los demas providers se enteren del cambio
+    ref.invalidate(transactionsProvider);
+    ref.invalidate(accountsProvider);
   }
 }
+
+final quickEntryControllerProvider =
+    NotifierProvider.autoDispose<QuickEntryController, QuickEntryState>(
+      QuickEntryController.new,
+    );

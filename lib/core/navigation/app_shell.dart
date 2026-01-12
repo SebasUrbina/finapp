@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'bottom_nav_bar.dart';
-import 'package:carenine/features/transactions/screens/create_recurring_rule_screen.dart';
-import 'package:carenine/features/quick_entry/quick_entry_sheet.dart';
+import 'package:finapp/features/quick_entry/quick_entry_sheet_screen.dart';
+import 'package:finapp/features/dashboard/dashboard_screen.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -14,10 +14,10 @@ class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    RecurringRuleScreen(),
-    Placeholder(),
-    Placeholder(),
-    Placeholder(),
+    const DashboardScreen(),
+    const Placeholder(),
+    const Placeholder(),
+    const Placeholder(),
   ];
 
   @override

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:finapp/domain/models/finance_models.dart';
-import 'package:finapp/core/theme/app_theme.dart';
 
 class AccountCategoryRow extends StatelessWidget {
   final Account? selectedAccount;
@@ -69,12 +68,16 @@ class SelectorCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colors.onSurface.withValues(alpha: 0.05),
+        color: colors.surfaceContainerHighest.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colors.outline.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: colors.onSurface.withValues(alpha: 0.5)),
+          Icon(icon, size: 20, color: colors.primary.withValues(alpha: 0.7)),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -83,13 +86,18 @@ class SelectorCard extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    color: colors.onSurface.withValues(alpha: 0.5),
+                    color: colors.onSurface.withValues(alpha: 0.6),
                     fontSize: 10,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
                   value,
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: colors.onSurface,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],

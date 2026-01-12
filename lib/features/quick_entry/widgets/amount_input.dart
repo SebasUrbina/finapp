@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:finapp/core/theme/app_theme.dart';
 
 class AmountInput extends StatelessWidget {
   final double value;
@@ -21,7 +20,13 @@ class AmountInput extends StatelessWidget {
       ),
       decoration: InputDecoration(
         hintText: '0',
+        hintStyle: TextStyle(color: colors.onSurface.withValues(alpha: 0.3)),
         prefixText: r'$',
+        prefixStyle: TextStyle(
+          fontSize: 48,
+          fontWeight: FontWeight.bold,
+          color: colors.primary,
+        ),
         border: InputBorder.none,
       ),
       onChanged: (v) {

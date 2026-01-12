@@ -13,19 +13,23 @@ class TransactionTypeSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Expanded(
           child: SegmentedButton<TransactionType>(
+            showSelectedIcon: false,
             segments: const [
               ButtonSegment<TransactionType>(
                 value: TransactionType.expense,
                 label: Text('Gasto'),
+                icon: Icon(Icons.arrow_downward, size: 24),
               ),
               ButtonSegment<TransactionType>(
                 value: TransactionType.income,
                 label: Text('Ingreso'),
+                icon: Icon(Icons.arrow_upward, size: 24),
               ),
             ],
             selected: {selected},

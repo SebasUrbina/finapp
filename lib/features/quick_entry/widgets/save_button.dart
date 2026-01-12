@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:finapp/core/theme/app_theme.dart';
 
 class SaveButton extends StatelessWidget {
   final bool isRecurring;
@@ -24,13 +23,16 @@ class SaveButton extends StatelessWidget {
           backgroundColor: colors.primary,
           foregroundColor: colors.onPrimary,
           padding: const EdgeInsets.symmetric(vertical: 18),
+          elevation: onPressed != null ? 2 : 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
         ),
         child: Text(
           isRecurring ? 'Guardar gasto recurrente' : 'Guardar transacción',
-          style: theme.textTheme.labelLarge,
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );

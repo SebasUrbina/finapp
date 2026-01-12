@@ -2,6 +2,7 @@ import 'package:finapp/data/providers/finance_providers.dart';
 import 'package:finapp/features/quick_entry/quick_entry_controller.dart';
 import 'package:finapp/features/quick_entry/widgets/account_category_row.dart';
 import 'package:finapp/features/quick_entry/widgets/amount_input.dart';
+import 'package:finapp/features/quick_entry/widgets/date_selector.dart';
 import 'package:finapp/features/quick_entry/widgets/description_input.dart';
 import 'package:finapp/features/quick_entry/widgets/recurrence_options.dart';
 import 'package:finapp/features/quick_entry/widgets/recurring_toggle.dart';
@@ -35,7 +36,13 @@ class QuickEntrySheet extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               AmountInput(value: state.amount, onChanged: notifier.setAmount),
+              const SizedBox(height: 16),
               DescriptionInput(onChanged: notifier.setDescription),
+              const SizedBox(height: 12),
+              DateSelector(
+                selectedDate: state.selectedDate,
+                onChanged: notifier.setDate,
+              ),
               const SizedBox(height: 12),
               AccountCategoryRow(
                 selectedAccount: state.selectedAccount,

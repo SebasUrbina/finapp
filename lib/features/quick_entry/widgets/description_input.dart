@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:finapp/core/theme/app_theme.dart';
 
 class DescriptionInput extends StatelessWidget {
   final ValueChanged<String> onChanged;
@@ -13,14 +12,17 @@ class DescriptionInput extends StatelessWidget {
     return TextField(
       decoration: InputDecoration(
         hintText: 'Descripción...',
-        hintStyle: TextStyle(color: colors.onSurface.withValues(alpha: 0.5)),
+        hintStyle: TextStyle(color: colors.onSurface.withValues(alpha: 0.4)),
         filled: true,
-        fillColor: theme.dividerColor.withValues(alpha: 0.3),
+        fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.5),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
-        prefixIcon: Icon(Icons.description_outlined, color: colors.onSurface),
+        prefixIcon: Icon(
+          Icons.description_outlined,
+          color: colors.primary.withValues(alpha: 0.7),
+        ),
       ),
       onChanged: onChanged,
     );

@@ -22,6 +22,7 @@ class QuickEntryController extends AutoDisposeNotifier<QuickEntryState> {
   void setType(TransactionType t) => state = state.copyWith(type: t);
   void setAccount(Account? a) => state = state.copyWith(selectedAccount: a);
   void setCategory(Category? c) => state = state.copyWith(selectedCategory: c);
+  void setDate(DateTime d) => state = state.copyWith(selectedDate: d);
   void toggleRecurring(bool v) => state = state.copyWith(isRecurring: v);
 
   void setRecurrence(RecurrenceFrequency f, int i, int d) {
@@ -36,7 +37,7 @@ class QuickEntryController extends AutoDisposeNotifier<QuickEntryState> {
       accountId: state.selectedAccount!.id,
       categoryId: state.selectedCategory!.id,
       amount: Money(state.amount.toInt()),
-      date: DateTime.now(),
+      date: state.selectedDate,
       type: state.type,
       description: state.description,
     );

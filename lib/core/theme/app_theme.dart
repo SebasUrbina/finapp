@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color seedPrimary = Color(0xFF6C63FF);
+  static const Color seedPrimary = Color.fromARGB(255, 2, 60, 250);
 
   // --- TEMA CLARO ---
   static ThemeData lightTheme = ThemeData(

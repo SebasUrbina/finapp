@@ -3,6 +3,7 @@ import 'package:finapp/features/dashboard/widgets/dark_mode_switcher.dart';
 import 'package:finapp/features/dashboard/widgets/transaction_list_item.dart';
 import 'package:finapp/features/dashboard/widgets/category_expense_item.dart';
 import 'package:finapp/features/dashboard/widgets/account_card_stack.dart';
+import 'package:finapp/features/dashboard/widgets/transaction_search_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,7 +47,22 @@ class DashboardScreen extends ConsumerWidget {
               const SizedBox(height: 32),
 
               // Recent Transactions
-              _buildSectionHeader(context, 'Transacciones recientes'),
+              _buildSectionHeader(
+                context,
+                'Transacciones recientes',
+                onSearchTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => TransactionSearchModal(
+                      transactions: state.transactions,
+                      categories: state.categories,
+                      accounts: state.accounts,
+                    ),
+                  );
+                },
+              ),
               const SizedBox(height: 16),
               _buildRecentTransactions(context, controller),
               const SizedBox(height: 32),
@@ -63,8 +79,27 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title) {
-    return Text(title, style: Theme.of(context).textTheme.titleLarge);
+  Widget _buildSectionHeader(
+    BuildContext context,
+    String title, {
+    VoidCallback? onSearchTap,
+  }) {
+    return Row(
+      children: [
+        Text(title, style: Theme.of(context).textTheme.titleLarge),
+        if (onSearchTap != null) ...[
+          const Spacer(),
+          IconButton(
+            onPressed: onSearchTap,
+            icon: Icon(
+              Icons.search,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            tooltip: 'Buscar transacciones',
+          ),
+        ],
+      ],
+    );
   }
 
   // Recent Transactions Section

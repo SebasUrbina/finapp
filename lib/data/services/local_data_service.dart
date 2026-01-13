@@ -172,7 +172,43 @@ class LocalDataService {
     Budget(
       id: 'b_rent_monthly',
       target: CategoryBudgetTarget('c_rent'),
-      limit: const Money(25000000),
+      limit: const Money(45000000), // $450.000
+      period: BudgetPeriod.monthly,
+    ),
+    Budget(
+      id: 'b_transport_monthly',
+      target: CategoryBudgetTarget('c_transport'),
+      limit: const Money(8000000), // $80.000
+      period: BudgetPeriod.monthly,
+    ),
+    Budget(
+      id: 'b_restaurants_monthly',
+      target: CategoryBudgetTarget('c_eating_out'),
+      limit: const Money(10000000), // $100.000
+      period: BudgetPeriod.monthly,
+    ),
+    Budget(
+      id: 'b_entertainment_monthly',
+      target: CategoryBudgetTarget('c_entertainment'),
+      limit: const Money(12000000), // $120.000
+      period: BudgetPeriod.monthly,
+    ),
+    Budget(
+      id: 'b_health_monthly',
+      target: CategoryBudgetTarget('c_health'),
+      limit: const Money(15000000), // $150.000
+      period: BudgetPeriod.monthly,
+    ),
+    Budget(
+      id: 'b_utilities_monthly',
+      target: CategoryBudgetTarget('c_utilities'),
+      limit: const Money(10000000), // $100.000
+      period: BudgetPeriod.monthly,
+    ),
+    Budget(
+      id: 'b_supermarket_monthly',
+      target: CategoryBudgetTarget('c_supermarket'),
+      limit: const Money(30000000), // $300.000
       period: BudgetPeriod.monthly,
     ),
   ];

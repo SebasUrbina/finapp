@@ -28,6 +28,10 @@ class DashboardController extends StateNotifier<DashboardState> {
     state = state.copyWith(selectedDate: date);
   }
 
+  void setSelectedAccount(String? accountId) {
+    state = state.copyWith(selectedAccountId: accountId);
+  }
+
   /// Refresh data from repository
   void refresh() {
     state = state.copyWith(
@@ -43,30 +47,46 @@ class DashboardController extends StateNotifier<DashboardState> {
   DateTimeRange get periodRange {
     final date = state.selectedDate;
 
-    if (state.period == PeriodFilter.week) {
-      // Get the week (Monday to Sunday)
-      final weekday = date.weekday;
-      final monday = date.subtract(Duration(days: weekday - 1));
-      final sunday = monday.add(const Duration(days: 6));
-      return DateTimeRange(
-        start: DateTime(monday.year, monday.month, monday.day),
-        end: DateTime(sunday.year, sunday.month, sunday.day, 23, 59, 59),
-      );
-    } else {
-      // Get the month
-      final firstDay = DateTime(date.year, date.month, 1);
-      final lastDay = DateTime(date.year, date.month + 1, 0, 23, 59, 59);
-      return DateTimeRange(start: firstDay, end: lastDay);
+    switch (state.period) {
+      case PeriodFilter.year:
+        // Get the year
+        final firstDay = DateTime(date.year, 1, 1);
+        final lastDay = DateTime(date.year, 12, 31, 23, 59, 59);
+        return DateTimeRange(start: firstDay, end: lastDay);
+
+      case PeriodFilter.week:
+        // Get the week (Monday to Sunday)
+        final weekday = date.weekday;
+        final monday = date.subtract(Duration(days: weekday - 1));
+        final sunday = monday.add(const Duration(days: 6));
+        return DateTimeRange(
+          start: DateTime(monday.year, monday.month, monday.day),
+          end: DateTime(sunday.year, sunday.month, sunday.day, 23, 59, 59),
+        );
+
+      case PeriodFilter.month:
+        // Get the month
+        final firstDay = DateTime(date.year, date.month, 1);
+        final lastDay = DateTime(date.year, date.month + 1, 0, 23, 59, 59);
+        return DateTimeRange(start: firstDay, end: lastDay);
     }
   }
 
-  /// Get transactions filtered by current period
+  /// Get transactions filtered by current period and selected account
   List<Transaction> get filteredTransactions {
     final range = periodRange;
-    return state.transactions.where((t) {
+    var filtered = state.transactions.where((t) {
       return t.date.isAfter(range.start.subtract(const Duration(seconds: 1))) &&
           t.date.isBefore(range.end.add(const Duration(seconds: 1)));
-    }).toList()..sort((a, b) => b.date.compareTo(a.date)); // Most recent first
+    });
+
+    // Filter by account if one is selected
+    if (state.selectedAccountId != null) {
+      filtered = filtered.where((t) => t.accountId == state.selectedAccountId);
+    }
+
+    return filtered.toList()
+      ..sort((a, b) => b.date.compareTo(a.date)); // Most recent first
   }
 
   /// Total income for the period

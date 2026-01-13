@@ -2,8 +2,7 @@ import 'package:finapp/features/dashboard/providers/dashboard_provider.dart';
 import 'package:finapp/features/dashboard/widgets/dark_mode_switcher.dart';
 import 'package:finapp/features/dashboard/widgets/transaction_list_item.dart';
 import 'package:finapp/features/dashboard/widgets/category_expense_item.dart';
-import 'package:finapp/features/dashboard/widgets/financial_summary_card.dart';
-import 'package:finapp/features/dashboard/widgets/account_card.dart';
+import 'package:finapp/features/dashboard/widgets/account_card_stack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -35,30 +34,27 @@ class DashboardScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
 
-              // Financial Summary Card with integrated period toggle
-              FinancialSummaryCard(
+              // Account Card Stack (swipeable cards)
+              AccountCardStack(
                 controller: controller,
+                accounts: state.accounts,
+                selectedAccountId: state.selectedAccountId,
                 selectedPeriod: state.period,
+                onAccountChanged: controller.setSelectedAccount,
                 onPeriodChanged: controller.setPeriod,
               ),
               const SizedBox(height: 32),
 
               // Recent Transactions
-              _buildSectionHeader(context, 'Recent transactions'),
+              _buildSectionHeader(context, 'Transacciones recientes'),
               const SizedBox(height: 16),
               _buildRecentTransactions(context, controller),
               const SizedBox(height: 32),
 
               // Expenses by Category
-              _buildSectionHeader(context, 'Expenses by category'),
+              _buildSectionHeader(context, 'Gastos por categoría'),
               const SizedBox(height: 16),
               _buildExpensesByCategory(context, controller),
-              const SizedBox(height: 32),
-
-              // Accounts
-              _buildSectionHeader(context, 'Your accounts'),
-              const SizedBox(height: 16),
-              _buildAccounts(controller),
               const SizedBox(height: 24),
             ],
           ),
@@ -173,19 +169,6 @@ class DashboardScreen extends ConsumerWidget {
             })
             .toList(),
       ),
-    );
-  }
-
-  Widget _buildAccounts(dynamic controller) {
-    final accounts = controller.state.accounts;
-
-    return Column(
-      children: (accounts as List).map<Widget>((account) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: AccountCard(account: account),
-        );
-      }).toList(),
     );
   }
 

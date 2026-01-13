@@ -1,84 +1,131 @@
 import 'package:finapp/domain/models/finance_models.dart';
+import 'package:finapp/features/dashboard/dashboard_state.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class AccountCard extends StatelessWidget {
-  final Account account;
+  final Account? account; // null = "General" card
+  final Money balance;
+  final Money income;
+  final Money expenses;
+  final PeriodFilter selectedPeriod;
+  final ValueChanged<PeriodFilter> onPeriodChanged;
 
-  const AccountCard({super.key, required this.account});
+  const AccountCard({
+    super.key,
+    this.account,
+    required this.balance,
+    required this.income,
+    required this.expenses,
+    required this.selectedPeriod,
+    required this.onPeriodChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
     final currencyFormat = NumberFormat.currency(
       symbol: r'$',
       decimalDigits: 0,
       locale: 'es_CL',
     );
 
-    final isNegative = account.balance.cents < 0;
+    // Determine card gradient based on account
+    final gradient = _getCardGradient(context);
+    final isGeneral = account == null;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      height: 200,
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 20,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Row(
+      child: Stack(
         children: [
-          // Icon
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: (account.color ?? colors.primary).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              account.icon ?? Icons.account_balance_wallet,
-              color: account.color ?? colors.primary,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-
-          // Account name and type
-          Expanded(
+          // Main content
+          Padding(
+            padding: const EdgeInsets.all(20),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header row with title and period selector
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      isGeneral ? 'Total Balance' : account!.name,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    _buildPeriodSelector(context),
+                  ],
+                ),
+                const SizedBox(height: 6),
+
+                // Balance
                 Text(
-                  account.name,
-                  style: TextStyle(
-                    color: colors.onSurface,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                  currencyFormat.format(balance.value),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  _getAccountTypeLabel(account.type),
-                  style: TextStyle(color: colors.onSurface, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
 
-          // Balance
-          Text(
-            currencyFormat.format(account.balance.value),
-            style: TextStyle(
-              color: isNegative ? colors.error : colors.primary,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+                const SizedBox(height: 16),
+
+                // Income and Expenses row
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatItem(
+                        'Ingresos',
+                        currencyFormat.format(income.value),
+                      ),
+                    ),
+                    const SizedBox(width: 24),
+                    Expanded(
+                      child: _buildStatItem(
+                        'Gastos',
+                        currencyFormat.format(expenses.value),
+                      ),
+                    ),
+                  ],
+                ),
+
+                if (!isGeneral) ...[
+                  // Account icon/logo
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Icon(
+                          account!.icon ?? Icons.account_balance_wallet,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -86,22 +133,95 @@ class AccountCard extends StatelessWidget {
     );
   }
 
-  String _getAccountTypeLabel(AccountType type) {
-    switch (type) {
-      case AccountType.checking:
-        return 'Checking Account';
-      case AccountType.debit:
-        return 'Debit';
-      case AccountType.creditCard:
-        return 'Credit Card';
-      case AccountType.cash:
-        return 'Cash';
-      case AccountType.digitalWallet:
-        return 'Digital Wallet';
-      case AccountType.savings:
-        return 'Savings';
-      case AccountType.investment:
-        return 'Investment';
+  Widget _buildStatItem(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white60,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPeriodSelector(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildPeriodButton('Y', PeriodFilter.year),
+          const SizedBox(width: 4),
+          _buildPeriodButton('W', PeriodFilter.week),
+          const SizedBox(width: 4),
+          _buildPeriodButton('M', PeriodFilter.month),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodButton(String label, PeriodFilter period) {
+    final isSelected = selectedPeriod == period;
+
+    return GestureDetector(
+      onTap: () => onPeriodChanged(period),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.black87 : Colors.white70,
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  LinearGradient _getCardGradient(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    if (account == null) {
+      // General card - purple/blue gradient
+      return const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF5B4FE5), Color(0xFF3D3A7C)],
+      );
     }
+
+    // Account-specific gradient based on account color
+    final accountColor = account!.color ?? colors.primary;
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        accountColor,
+        HSLColor.fromColor(accountColor).withLightness(0.3).toColor(),
+      ],
+    );
   }
 }

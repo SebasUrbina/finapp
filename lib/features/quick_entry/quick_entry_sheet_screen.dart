@@ -30,30 +30,50 @@ class QuickEntrySheet extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TransactionTypeSwitcher(
-                selected: state.type,
-                onChanged: notifier.setType,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: AmountInput(
+                      value: state.amount,
+                      onChanged: notifier.setAmount,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  TransactionTypeSwitcher(
+                    selected: state.type,
+                    onChanged: notifier.setType,
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              AmountInput(value: state.amount, onChanged: notifier.setAmount),
-              const SizedBox(height: 16),
-              DescriptionInput(onChanged: notifier.setDescription),
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
               DateSelector(
                 selectedDate: state.selectedDate,
                 onChanged: notifier.setDate,
               ),
+              const SizedBox(height: 16),
+              DescriptionInput(onChanged: notifier.setDescription),
               const SizedBox(height: 12),
-              AccountCategoryRow(
-                selectedAccount: state.selectedAccount,
-                selectedCategory: state.selectedCategory,
-                onAccountTap: () => _showAccountPicker(context, ref),
-                onCategoryTap: () => _showCategoryPicker(context, ref),
-              ),
-              const SizedBox(height: 12),
-              RecurringToggle(
-                value: state.isRecurring,
-                onChanged: notifier.toggleRecurring,
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: AccountCategoryRow(
+                      selectedAccount: state.selectedAccount,
+                      selectedCategory: state.selectedCategory,
+                      onAccountTap: () => _showAccountPicker(context, ref),
+                      onCategoryTap: () => _showCategoryPicker(context, ref),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 1,
+                    child: RecurringToggle(
+                      value: state.isRecurring,
+                      onChanged: notifier.toggleRecurring,
+                    ),
+                  ),
+                ],
               ),
               if (state.isRecurring) ...[
                 const SizedBox(height: 12),
@@ -82,19 +102,14 @@ class QuickEntrySheet extends ConsumerWidget {
   }
 
   void _showAccountPicker(BuildContext context, WidgetRef ref) {
-    // Theme
-    final colors = Theme.of(context).colorScheme;
-    final accounts = ref.watch(accountsProvider);
-
     showModalBottomSheet(
       context: context,
-      backgroundColor: colors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => Consumer(
         builder: (context, ref, _) {
-          // Theme
           final colors = Theme.of(context).colorScheme;
           final accounts = ref.watch(accountsProvider);
 
@@ -112,26 +127,33 @@ class QuickEntrySheet extends ConsumerWidget {
                     color: colors.primary,
                   ),
                 ),
-                SizedBox(height: 16),
-                ...accounts.map(
-                  (account) => ListTile(
-                    leading: Icon(
-                      account.icon ?? Icons.account_balance_wallet,
-                      color: account.color ?? colors.primary,
-                    ),
-                    title: Text(
-                      account.name,
-                      style: TextStyle(color: colors.onSurface),
-                    ),
-                    subtitle: Text(
-                      r'$' + account.balance.value.toStringAsFixed(0),
-                      style: TextStyle(color: colors.onSurface),
-                    ),
-                    onTap: () {
-                      ref
-                          .read(quickEntryControllerProvider.notifier)
-                          .setAccount(account);
-                      Navigator.pop(context);
+                const SizedBox(height: 16),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: accounts.length,
+                    itemBuilder: (context, index) {
+                      final account = accounts[index];
+                      return ListTile(
+                        leading: Icon(
+                          account.icon ?? Icons.account_balance_wallet,
+                          color: account.color ?? colors.primary,
+                        ),
+                        title: Text(
+                          account.name,
+                          style: TextStyle(color: colors.onSurface),
+                        ),
+                        subtitle: Text(
+                          r'$' + account.balance.value.toStringAsFixed(0),
+                          style: TextStyle(color: colors.onSurface),
+                        ),
+                        onTap: () {
+                          ref
+                              .read(quickEntryControllerProvider.notifier)
+                              .setAccount(account);
+                          Navigator.pop(context);
+                        },
+                      );
                     },
                   ),
                 ),
@@ -144,23 +166,23 @@ class QuickEntrySheet extends ConsumerWidget {
   }
 
   void _showCategoryPicker(BuildContext context, WidgetRef ref) {
-    // Theme
-    final colors = Theme.of(context).colorScheme;
-
-    final notifier = ref.read(quickEntryControllerProvider.notifier);
-
     showModalBottomSheet(
       context: context,
-      backgroundColor: colors.surface,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => Consumer(
         builder: (context, ref, _) {
+          final colors = Theme.of(context).colorScheme;
           final categories = ref.watch(categoriesProvider);
 
           return Container(
             padding: const EdgeInsets.all(24),
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.7,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,27 +195,34 @@ class QuickEntrySheet extends ConsumerWidget {
                     color: colors.primary,
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Flexible(
-                  child: GridView.count(
+                  child: GridView.builder(
                     shrinkWrap: true,
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    children: categories.map((cat) {
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                        ),
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final cat = categories[index];
                       return InkWell(
                         onTap: () {
-                          notifier.setCategory(cat);
+                          ref
+                              .read(quickEntryControllerProvider.notifier)
+                              .setCategory(cat);
                           Navigator.pop(context);
                         },
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             CircleAvatar(
-                              backgroundColor: colors.surface,
+                              backgroundColor: colors.surfaceContainerLow,
                               child: Icon(cat.iconData, color: colors.primary),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
                               cat.name,
                               style: TextStyle(
@@ -201,11 +230,13 @@ class QuickEntrySheet extends ConsumerWidget {
                                 color: colors.onSurface,
                               ),
                               textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       );
-                    }).toList(),
+                    },
                   ),
                 ),
               ],

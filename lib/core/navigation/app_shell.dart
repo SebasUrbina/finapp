@@ -30,6 +30,7 @@ class _AppShellState extends State<AppShell> {
         onTap: (index) => setState(() => _currentIndex = index),
       ),
       floatingActionButton: FloatingActionButton(
+        shape: const CircleBorder(),
         onPressed: () {
           showModalBottomSheet(
             context: context,

@@ -16,90 +16,39 @@ class DateSelector extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.primaryContainer.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colors.primary.withValues(alpha: 0.2),
-          width: 1,
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _QuickDateChip(
+              label: 'Hoy',
+              isSelected: _isToday(selectedDate),
+              onTap: () => onChanged(DateTime.now()),
+              colors: colors,
+            ),
+            const SizedBox(width: 8),
+            _QuickDateChip(
+              label: 'Ayer',
+              isSelected: _isYesterday(selectedDate),
+              onTap: () =>
+                  onChanged(DateTime.now().subtract(const Duration(days: 1))),
+              colors: colors,
+            ),
+            const SizedBox(width: 8),
+            _QuickDateChip(
+              label: _isToday(selectedDate) || _isYesterday(selectedDate)
+                  ? _formatDate(selectedDate)
+                  : DateFormat('d MMM', 'es').format(selectedDate),
+              isSelected:
+                  !_isToday(selectedDate) && !_isYesterday(selectedDate),
+              onTap: () => _showDatePicker(context),
+              colors: colors,
+              icon: Icons.calendar_today,
+            ),
+          ],
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.calendar_today, size: 20, color: colors.primary),
-              const SizedBox(width: 8),
-              Text(
-                'Fecha',
-                style: TextStyle(
-                  color: colors.onSurface.withValues(alpha: 0.6),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const Spacer(),
-              InkWell(
-                onTap: () => _showDatePicker(context),
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        _formatDate(selectedDate),
-                        style: TextStyle(
-                          color: colors.primary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_drop_down,
-                        color: colors.primary,
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _QuickDateButton(
-                label: 'Hoy',
-                isSelected: _isToday(selectedDate),
-                onTap: () => onChanged(DateTime.now()),
-                colors: colors,
-              ),
-              const SizedBox(width: 8),
-              _QuickDateButton(
-                label: 'Ayer',
-                isSelected: _isYesterday(selectedDate),
-                onTap: () =>
-                    onChanged(DateTime.now().subtract(const Duration(days: 1))),
-                colors: colors,
-              ),
-              const SizedBox(width: 8),
-              _QuickDateButton(
-                label: 'Hace 2 días',
-                isSelected: _isDaysAgo(selectedDate, 2),
-                onTap: () =>
-                    onChanged(DateTime.now().subtract(const Duration(days: 2))),
-                colors: colors,
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -152,55 +101,56 @@ class DateSelector extends StatelessWidget {
         date.month == yesterday.month &&
         date.day == yesterday.day;
   }
-
-  bool _isDaysAgo(DateTime date, int days) {
-    final target = DateTime.now().subtract(Duration(days: days));
-    return date.year == target.year &&
-        date.month == target.month &&
-        date.day == target.day;
-  }
 }
 
-class _QuickDateButton extends StatelessWidget {
+class _QuickDateChip extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
   final ColorScheme colors;
+  final IconData? icon;
 
-  const _QuickDateButton({
+  const _QuickDateChip({
     required this.label,
     required this.isSelected,
     required this.onTap,
     required this.colors,
+    this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? colors.primary : colors.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected
-                  ? colors.primary
-                  : colors.outline.withValues(alpha: 0.3),
-              width: 1,
+    return FilterChip(
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(
+              icon,
+              size: 14,
+              color: isSelected ? colors.onPrimary : colors.primary,
             ),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isSelected ? colors.onPrimary : colors.onSurface,
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            ),
-          ),
+            const SizedBox(width: 4),
+          ],
+          Text(label),
+        ],
+      ),
+      selected: isSelected,
+      onSelected: (_) => onTap(),
+      selectedColor: colors.primary,
+      checkmarkColor: colors.onPrimary,
+      labelStyle: TextStyle(
+        color: isSelected ? colors.onPrimary : colors.onSurface,
+        fontSize: 13,
+        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: isSelected
+              ? colors.primary
+              : colors.outline.withValues(alpha: 0.2),
         ),
       ),
     );

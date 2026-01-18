@@ -18,30 +18,22 @@ class AccountCategoryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Expanded(
-          child: InkWell(
+        Flexible(
+          child: _MinimalSelector(
+            icon:
+                selectedAccount?.icon ?? Icons.account_balance_wallet_outlined,
+            label: selectedAccount?.name ?? 'Cuenta',
             onTap: onAccountTap,
-            borderRadius: BorderRadius.circular(16),
-            child: SelectorCard(
-              icon:
-                  selectedAccount?.icon ??
-                  Icons.account_balance_wallet_outlined,
-              label: 'Cuenta',
-              value: selectedAccount?.name ?? 'Seleccionar',
-            ),
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: InkWell(
+        const SizedBox(width: 8),
+        Flexible(
+          child: _MinimalSelector(
+            icon: selectedCategory?.iconData ?? Icons.category_outlined,
+            label: selectedCategory?.name ?? 'Categoría',
             onTap: onCategoryTap,
-            borderRadius: BorderRadius.circular(16),
-            child: SelectorCard(
-              icon: selectedCategory?.iconData ?? Icons.category_outlined,
-              label: 'Categoría',
-              value: selectedCategory?.name ?? 'Seleccionar',
-            ),
           ),
         ),
       ],
@@ -49,62 +41,31 @@ class AccountCategoryRow extends StatelessWidget {
   }
 }
 
-class SelectorCard extends StatelessWidget {
+class _MinimalSelector extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String value;
+  final VoidCallback onTap;
 
-  const SelectorCard({
-    super.key,
+  const _MinimalSelector({
     required this.icon,
     required this.label,
-    required this.value,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colors.outline.withValues(alpha: 0.2),
-          width: 1,
-        ),
+    final colors = Theme.of(context).colorScheme;
+    return ActionChip(
+      onPressed: onTap,
+      avatar: Icon(icon, size: 16, color: colors.primary),
+      label: Text(label, overflow: TextOverflow.ellipsis, maxLines: 1),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: colors.outline.withValues(alpha: 0.2)),
       ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: colors.primary.withValues(alpha: 0.7)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: colors.onSurface.withValues(alpha: 0.6),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: colors.onSurface,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: colors.surfaceContainerLow,
     );
   }
 }

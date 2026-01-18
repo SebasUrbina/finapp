@@ -12,7 +12,7 @@ class AmountInput extends StatelessWidget {
     final colors = theme.colorScheme;
     return TextField(
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      textAlign: TextAlign.center,
+      textAlign: TextAlign.start,
       style: TextStyle(
         fontSize: 48,
         fontWeight: FontWeight.bold,

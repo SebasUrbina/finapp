@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'bottom_nav_bar.dart';
-import 'package:finapp/features/quick_entry/quick_entry_sheet_screen.dart';
+import 'package:finapp/features/profile/profile_screen.dart';
 import 'package:finapp/features/dashboard/dashboard_screen.dart';
 import 'package:finapp/features/budget/budget_screen.dart';
+import 'package:finapp/features/quick_entry/quick_entry_sheet_screen.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -18,7 +19,7 @@ class _AppShellState extends State<AppShell> {
     const DashboardScreen(),
     const BudgetScreen(),
     const Placeholder(),
-    const Placeholder(),
+    const ProfileScreen(),
   ];
 
   @override

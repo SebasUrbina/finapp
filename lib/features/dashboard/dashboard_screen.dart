@@ -1,11 +1,65 @@
-import 'package:finapp/features/dashboard/providers/dashboard_provider.dart';
-import 'package:finapp/features/dashboard/widgets/dark_mode_switcher.dart';
+import 'package:finapp/domain/models/finance_models.dart';
+import 'package:finapp/features/dashboard/dashboard_controller.dart';
+import 'package:finapp/features/dashboard/dashboard_state.dart';
 import 'package:finapp/features/dashboard/widgets/transaction_list_item.dart';
-import 'package:finapp/features/dashboard/widgets/category_expense_item.dart';
+import 'package:finapp/features/dashboard/widgets/category_expense_list.dart';
+import 'package:finapp/features/dashboard/widgets/category_settings_modal/category_settings_modal.dart';
 import 'package:finapp/features/dashboard/widgets/account_card_stack.dart';
 import 'package:finapp/features/dashboard/widgets/transaction_search_modal.dart';
+import 'package:finapp/features/dashboard/widgets/section_header.dart';
+import 'package:finapp/features/dashboard/widgets/dark_mode_switcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+class RecentTransactionsList extends ConsumerWidget {
+  final List<Transaction> transactions;
+  const RecentTransactionsList({super.key, required this.transactions});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (transactions.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(24.0),
+        child: Center(child: Text('No hay transacciones recientes')),
+      );
+    }
+
+    final controller = ref.watch(dashboardControllerProvider.notifier);
+    final theme = Theme.of(context);
+    final items = transactions.take(5).toList();
+
+    return Column(
+      children: items.map((transaction) {
+        final category = controller.getCategoryById(transaction.categoryId);
+        final account = controller.getAccountById(transaction.accountId);
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Container(
+            decoration: BoxDecoration(
+              color: theme.cardTheme.color,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(
+                    alpha: theme.brightness == Brightness.dark ? 0.2 : 0.05,
+                  ),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: TransactionListItem(
+              transaction: transaction,
+              category: category,
+              account: account,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -13,221 +67,139 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final controller = ref.watch(dashboardProvider.notifier);
-    final state = ref.watch(dashboardProvider);
+    final state = ref.watch(dashboardControllerProvider);
+    final controller = ref.watch(dashboardControllerProvider.notifier);
+
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: colors.surface,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header (Row with switch to modo oscuro)
-              Row(
-                children: [
-                  Text('Hello,', style: theme.textTheme.headlineLarge),
-                  const Spacer(),
-                  ThemeToggleButton(),
-                ],
-              ),
-              const SizedBox(height: 16),
+      backgroundColor: theme.colorScheme.surface,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? [theme.colorScheme.surface, theme.colorScheme.surface]
+                : [
+                    const Color(0xFFD9C7F7).withValues(alpha: 0.3),
+                    theme.colorScheme.surface,
+                  ],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
 
-              // Account Card Stack (swipeable cards)
-              AccountCardStack(
-                controller: controller,
-                accounts: state.accounts,
-                selectedAccountId: state.selectedAccountId,
-                selectedPeriod: state.period,
-                onAccountChanged: controller.setSelectedAccount,
-                onPeriodChanged: controller.setPeriod,
-              ),
-              const SizedBox(height: 32),
-
-              // Recent Transactions
-              _buildSectionHeader(
-                context,
-                'Transacciones recientes',
-                onSearchTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => TransactionSearchModal(
-                      transactions: state.transactions,
-                      categories: state.categories,
-                      accounts: state.accounts,
+                // Header Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.cardTheme.color,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.settings_outlined,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        onPressed: () => _showCategorySettings(context, state),
+                      ),
                     ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildRecentTransactions(context, controller),
-              const SizedBox(height: 32),
-
-              // Expenses by Category
-              _buildSectionHeader(context, 'Gastos por categoría'),
-              const SizedBox(height: 16),
-              _buildExpensesByCategory(context, controller),
-              const SizedBox(height: 24),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(
-    BuildContext context,
-    String title, {
-    VoidCallback? onSearchTap,
-  }) {
-    return Row(
-      children: [
-        Text(title, style: Theme.of(context).textTheme.titleLarge),
-        if (onSearchTap != null) ...[
-          const Spacer(),
-          IconButton(
-            onPressed: onSearchTap,
-            icon: Icon(
-              Icons.search,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            tooltip: 'Buscar transacciones',
-          ),
-        ],
-      ],
-    );
-  }
-
-  // Recent Transactions Section
-  Widget _buildRecentTransactions(BuildContext context, dynamic controller) {
-    final colors = Theme.of(context).colorScheme;
-    final recentTransactions = controller.recentTransactions;
-
-    if (recentTransactions.isEmpty) {
-      return _buildEmptyState(context, 'No transactions in this period');
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: (recentTransactions as List).asMap().entries.map<Widget>((
-          entry,
-        ) {
-          final index = entry.key;
-          final transaction = entry.value;
-          final category = controller.getCategoryById(transaction.categoryId);
-          final account = controller.getAccountById(transaction.accountId);
-          final isLast = index == recentTransactions.length - 1;
-
-          return Column(
-            children: [
-              TransactionListItem(
-                transaction: transaction,
-                category: category,
-                account: account,
-              ),
-              if (!isLast)
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: colors.outlineVariant,
-                  indent: 16,
-                  endIndent: 16,
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 16,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Fri, 15 Jan',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.cardTheme.color,
+                        shape: BoxShape.circle,
+                      ),
+                      child: ThemeToggleButton(),
+                    ),
+                  ],
                 ),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildExpensesByCategory(BuildContext context, dynamic controller) {
-    final colors = Theme.of(context).colorScheme;
-    final expensesByCategory = controller.expensesByCategory;
-
-    if (expensesByCategory.isEmpty) {
-      return _buildEmptyState(context, 'No expenses in this period');
-    }
-
-    final totalExpenses = controller.totalExpenses.cents;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+                const SizedBox(height: 16),
+                // Account Card Stack
+                AccountCardStack(
+                  controller: controller,
+                  accounts: state.accounts,
+                  selectedAccountId: state.selectedAccountId,
+                  selectedPeriod: state.period,
+                  onAccountChanged: controller.setSelectedAccount,
+                  onPeriodChanged: controller.setPeriod,
+                ),
+                const SizedBox(height: 24),
+                SectionHeader(
+                  title: 'Transacciones recientes',
+                  actionLabel: 'Ver todo',
+                  onActionTap: () => _showTransactionSearch(context, state),
+                ),
+                const SizedBox(height: 12),
+                RecentTransactionsList(
+                  transactions: controller.filteredTransactions,
+                ),
+                const SizedBox(height: 24),
+                SectionHeader(
+                  title: 'Gastos por categoría',
+                  actionLabel: 'Ver todo',
+                  onActionTap: () {},
+                ),
+                const SizedBox(height: 12),
+                CategoryExpenseList(
+                  expenses: controller.expensesByCategory,
+                  totalExpenses: controller.totalExpenses,
+                  limit: 4,
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
-        ],
-      ),
-      child: Column(
-        children: (expensesByCategory as Map).entries
-            .toList()
-            .asMap()
-            .entries
-            .map<Widget>((entry) {
-              final index = entry.key;
-              final mapEntry = entry.value;
-              final percentage = totalExpenses > 0
-                  ? (mapEntry.value.cents / totalExpenses * 100)
-                  : 0.0;
-              final isLast = index == expensesByCategory.length - 1;
-
-              return Column(
-                children: [
-                  CategoryExpenseItem(
-                    category: mapEntry.key,
-                    amount: mapEntry.value,
-                    percentage: percentage,
-                  ),
-                  if (!isLast) const SizedBox(height: 12),
-                ],
-              );
-            })
-            .toList(),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context, String message) {
-    final colors = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          message,
-          style: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
-          textAlign: TextAlign.center,
         ),
+      ),
+    );
+  }
+
+  // Category Settings Modal
+  void _showCategorySettings(BuildContext context, DashboardState state) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const CategorySettingsModal(),
+    );
+  }
+
+  // Transaction Search Modal
+  void _showTransactionSearch(BuildContext context, DashboardState state) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => TransactionSearchModal(
+        transactions: state.transactions,
+        categories: state.categories,
+        accounts: state.accounts,
       ),
     );
   }

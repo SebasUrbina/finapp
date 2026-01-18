@@ -44,61 +44,126 @@ class CategoryExpenseItem extends StatelessWidget {
 
     final categoryColor = _getCategoryColor(context, category.id);
 
-    return Row(
-      children: [
-        // Icon
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: categoryColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
+    return Container(
+      padding: const EdgeInsets.all(12), // Reducido para igualar transacciones
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(12), // 12 en transacciones
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          child: Icon(category.icon, color: categoryColor, size: 20),
-        ),
-        const SizedBox(width: 12),
-
-        // Category name and progress bar
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    category.name,
-                    style: TextStyle(
-                      color: colors.onSurface,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    currencyFormat.format(amount.value),
-                    style: TextStyle(
-                      color: colors.onSurface,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+              // Icon
+              Container(
+                width: 40, // 40 en transacciones
+                height: 40, // 40 en transacciones
+                decoration: BoxDecoration(
+                  color: categoryColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle, // Círculo en transacciones
+                ),
+                child: Icon(
+                  category.iconData,
+                  color: categoryColor,
+                  size: 20,
+                ), // 20 en transacciones
               ),
-              const SizedBox(height: 8),
-              // Progress bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: percentage / 100,
-                  backgroundColor: colors.surfaceContainerHighest,
-                  valueColor: AlwaysStoppedAnimation<Color>(categoryColor),
-                  minHeight: 4,
+              const SizedBox(width: 12),
+
+              // Category name and subtitles
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      category.name,
+                      style: theme
+                          .textTheme
+                          .titleMedium, // Igual que transacciones
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${percentage.round()}% del total consumido', // Sin decimales
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colors.onSurfaceVariant.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Amount
+              Text(
+                currencyFormat.format(amount.value),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colors.onSurface,
                 ),
               ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 12),
+          // Segmented Progress Bar
+          _SegmentedProgressBar(
+            percentage: percentage / 100,
+            color: categoryColor,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SegmentedProgressBar extends StatelessWidget {
+  final double percentage;
+  final Color color;
+
+  const _SegmentedProgressBar({required this.percentage, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double width = constraints.maxWidth;
+        // 32 segmentos para un look más fino/vertical
+        const int totalSegments = 32;
+        const double spacing = 2.0;
+        final double segmentWidth =
+            (width - (spacing * (totalSegments - 1))) / totalSegments;
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(totalSegments, (index) {
+            final double segmentProgress = (index + 1) / totalSegments;
+            final bool isActive =
+                segmentProgress <= percentage ||
+                (index == 0 && percentage > 0.001);
+
+            return Container(
+              width: segmentWidth,
+              height: 10,
+              decoration: BoxDecoration(
+                color: isActive
+                    ? color
+                    : colors.surfaceContainerHighest.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(1),
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 }

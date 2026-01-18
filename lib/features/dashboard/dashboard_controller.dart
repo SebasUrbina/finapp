@@ -1,3 +1,4 @@
+import 'package:finapp/data/providers/finance_providers.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/data/repositories/finance_repository.dart';
 import 'package:finapp/features/dashboard/dashboard_state.dart';
@@ -15,6 +16,7 @@ class DashboardController extends StateNotifier<DashboardState> {
           transactions: _repository.getTransactions(),
           accounts: _repository.getAccounts(),
           categories: _repository.getCategories(),
+          tags: _repository.getTags(),
         ),
       );
 
@@ -38,7 +40,23 @@ class DashboardController extends StateNotifier<DashboardState> {
       transactions: _repository.getTransactions(),
       accounts: _repository.getAccounts(),
       categories: _repository.getCategories(),
+      tags: _repository.getTags(),
     );
+  }
+
+  Future<void> addCategory(Category category) async {
+    await _repository.addCategory(category);
+    refresh();
+  }
+
+  Future<void> updateCategory(Category category) async {
+    await _repository.updateCategory(category);
+    refresh();
+  }
+
+  Future<void> deleteCategory(String categoryId) async {
+    await _repository.deleteCategory(categoryId);
+    refresh();
   }
 
   // ========== Computed Getters (Derived Values) ==========
@@ -145,7 +163,7 @@ class DashboardController extends StateNotifier<DashboardState> {
         orElse: () => const Category(
           id: 'unknown',
           name: 'Sin categoría',
-          icon: Icons.help_outline,
+          icon: CategoryIcon.home,
         ),
       );
 
@@ -257,9 +275,19 @@ class DashboardController extends StateNotifier<DashboardState> {
 
       // Calculate expenses for this period
       final periodTransactions = state.transactions.where((t) {
-        return t.type == TransactionType.expense &&
+        final isInPeriod =
+            t.type == TransactionType.expense &&
             t.date.isAfter(periodStart.subtract(const Duration(seconds: 1))) &&
             t.date.isBefore(periodEnd.add(const Duration(seconds: 1)));
+
+        if (!isInPeriod) return false;
+
+        // Respect account filter if selected
+        if (state.selectedAccountId != null) {
+          return t.accountId == state.selectedAccountId;
+        }
+
+        return true;
       });
 
       final periodExpenses = periodTransactions.isEmpty
@@ -291,3 +319,9 @@ class SpendingTrendData {
     required this.isCurrentPeriod,
   });
 }
+
+final dashboardControllerProvider =
+    StateNotifierProvider<DashboardController, DashboardState>((ref) {
+      final repo = ref.watch(financeRepositoryProvider);
+      return DashboardController(repo);
+    });

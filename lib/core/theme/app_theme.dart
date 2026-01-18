@@ -10,12 +10,19 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: seedPrimary,
       brightness: Brightness.light,
+      surface: const Color(0xFFF8FAFC),
+      surfaceContainerHighest: const Color(0xFFF1F5F9),
     ),
     textTheme: GoogleFonts.interTextTheme(_lightTextTheme),
-    appBarTheme: const AppBarTheme(elevation: 0, centerTitle: false),
+    appBarTheme: const AppBarTheme(
+      elevation: 0,
+      centerTitle: false,
+      backgroundColor: Colors.transparent,
+    ),
     cardTheme: CardThemeData(
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      color: Colors.white,
     ),
     extensions: [CategoryColors.light],
   );
@@ -26,48 +33,70 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: seedPrimary,
       brightness: Brightness.dark,
+      surface: const Color(0xFF0F172A),
+      surfaceContainerHighest: const Color(0xFF1E293B),
     ),
     textTheme: GoogleFonts.outfitTextTheme(_darkTextTheme),
-    appBarTheme: const AppBarTheme(elevation: 0, centerTitle: false),
+    appBarTheme: const AppBarTheme(
+      elevation: 0,
+      centerTitle: false,
+      backgroundColor: Colors.transparent,
+    ),
     cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      color: const Color(0xFF1E293B),
     ),
     extensions: [CategoryColors.dark],
   );
 
   static final TextTheme _lightTextTheme = const TextTheme(
     headlineLarge: TextStyle(
-      color: Color(0xFF1A1A1A),
+      color: Color(0xFF0F172A),
       fontWeight: FontWeight.bold,
       fontSize: 32,
     ),
     headlineMedium: TextStyle(
-      color: Color(0xFF1A1A1A),
+      color: Color(0xFF0F172A),
       fontWeight: FontWeight.bold,
       fontSize: 24,
     ),
     titleLarge: TextStyle(
-      color: Color(0xFF1A1A1A),
-      fontWeight: FontWeight.w600,
-      fontSize: 18,
+      color: Color(0xFF0F172A),
+      fontWeight: FontWeight.w700,
+      fontSize: 20,
     ),
-    bodyLarge: TextStyle(color: Color(0xFF1A1A1A), fontSize: 16),
-    bodyMedium: TextStyle(color: Color(0xFF8E8E93), fontSize: 14),
+    titleMedium: TextStyle(
+      color: Color(0xFF0F172A),
+      fontWeight: FontWeight.w600,
+      fontSize: 16,
+    ),
+    bodyLarge: TextStyle(color: Color(0xFF0F172A), fontSize: 16),
+    bodyMedium: TextStyle(color: Color(0xFF64748B), fontSize: 14),
   );
 
   static final TextTheme _darkTextTheme = const TextTheme(
+    headlineLarge: TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.bold,
+      fontSize: 32,
+    ),
     headlineMedium: TextStyle(
       color: Colors.white,
       fontWeight: FontWeight.bold,
-      fontSize: 28,
+      fontSize: 24,
     ),
     titleLarge: TextStyle(
       color: Colors.white,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w700,
       fontSize: 20,
     ),
-    bodyLarge: TextStyle(color: Colors.white, fontSize: 16),
+    titleMedium: TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.w600,
+      fontSize: 16,
+    ),
+    bodyLarge: TextStyle(color: Color(0xFFF1F5F9), fontSize: 16),
     bodyMedium: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
   );
 }
@@ -144,13 +173,13 @@ class CategoryColors extends ThemeExtension<CategoryColors> {
   );
 
   static const dark = CategoryColors(
-    health: Color(0xFF4ECDC4),
-    transport: Color(0xFF4A90E2),
-    food: Color(0xFFFF6B9D),
-    entertainment: Color(0xFF9B59B6),
-    utilities: Color(0xFFFFB74D),
-    education: Color(0xFF4A90E2),
-    shopping: Color(0xFFFF6B9D),
+    health: Color(0xFF4FD1C5),
+    transport: Color(0xFF63B3ED),
+    food: Color(0xFFF687B3),
+    entertainment: Color(0xFFB794F4),
+    utilities: Color(0xFFFBD38D),
+    education: Color(0xFF63B3ED),
+    shopping: Color(0xFFF687B3),
     other: Color(0xFF94A3B8),
   );
 }

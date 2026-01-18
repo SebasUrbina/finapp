@@ -191,7 +191,7 @@ class QuickEntrySheet extends ConsumerWidget {
                           children: [
                             CircleAvatar(
                               backgroundColor: colors.surface,
-                              child: Icon(cat.icon, color: colors.primary),
+                              child: Icon(cat.iconData, color: colors.primary),
                             ),
                             SizedBox(height: 4),
                             Text(

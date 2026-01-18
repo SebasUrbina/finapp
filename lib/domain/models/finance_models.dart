@@ -1,10 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:finapp/core/constants/category_icons.dart';
+
+enum CategoryIcon {
+  home,
+  shoppingCart,
+  group,
+  bus,
+  restaurant,
+  movie,
+  hospital,
+  receipt,
+  payments,
+  trendingUp,
+  bank,
+  creditCard,
+  school,
+  fitness,
+  flight,
+  car,
+  pets,
+  tools,
+  redeem,
+  laptop,
+}
 
 // Categories
 class Category {
   final String id;
   final String name;
-  final IconData icon;
+  final CategoryIcon icon;
 
   /// Referencias a tags
   final List<String> tagIds;
@@ -15,6 +39,8 @@ class Category {
     required this.icon,
     this.tagIds = const [],
   });
+
+  IconData get iconData => CategoryIconMapper.toIcon(icon);
 }
 
 // Note: No usamos subcategorias porque
@@ -197,20 +223,11 @@ class Account {
   });
 }
 
-
 // Recurrencia
-enum RecurrenceFrequency {
-  daily,
-  weekly,
-  monthly,
-  yearly,
-}
+enum RecurrenceFrequency { daily, weekly, monthly, yearly }
 
-enum RecurringStatus {
-  active,
-  paused,
-  completed,
-}
+enum RecurringStatus { active, paused, completed }
+
 class RecurringRule {
   final String id;
 
@@ -250,7 +267,7 @@ class RecurringRule {
     required this.startDate,
     this.endDate,
     this.maxOccurrences,
-  
+
     this.status = RecurringStatus.active,
     this.lastGeneratedAt,
     this.generatedCount = 0,

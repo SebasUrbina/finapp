@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class TransactionSearchController
     extends StateNotifier<TransactionSearchState> {
-  TransactionSearchController(TransactionSearchState initialState)
-    : super(initialState);
+  TransactionSearchController(super.initialState);
 
   /// Update search query
   void setSearchQuery(String query) {

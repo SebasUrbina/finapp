@@ -9,6 +9,7 @@ class DashboardState {
   final List<Transaction> transactions;
   final List<Account> accounts;
   final List<Category> categories;
+  final List<Tag> tags;
 
   const DashboardState({
     required this.period,
@@ -17,6 +18,7 @@ class DashboardState {
     required this.transactions,
     required this.accounts,
     required this.categories,
+    required this.tags,
   });
 
   DashboardState copyWith({
@@ -26,6 +28,7 @@ class DashboardState {
     List<Transaction>? transactions,
     List<Account>? accounts,
     List<Category>? categories,
+    List<Tag>? tags,
   }) {
     return DashboardState(
       period: period ?? this.period,
@@ -34,6 +37,7 @@ class DashboardState {
       transactions: transactions ?? this.transactions,
       accounts: accounts ?? this.accounts,
       categories: categories ?? this.categories,
+      tags: tags ?? this.tags,
     );
   }
 }

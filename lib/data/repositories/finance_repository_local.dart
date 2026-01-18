@@ -27,6 +27,30 @@ class FinanceRepositoryLocal implements FinanceRepository {
   Future<void> addTransaction(Transaction tx) async {
     LocalDataService.transactions.add(tx);
   }
+
+  @override
+  Future<void> addCategory(Category cat) async {
+    LocalDataService.categories.add(cat);
+  }
+
+  @override
+  Future<void> updateCategory(Category cat) async {
+    final index = LocalDataService.categories.indexWhere((c) => c.id == cat.id);
+    if (index != -1) {
+      LocalDataService.categories[index] = cat;
+    }
+  }
+
+  @override
+  Future<void> deleteCategory(String categoryId) async {
+    LocalDataService.categories.removeWhere((c) => c.id == categoryId);
+    // Also remove from transactions for safety (optional but good practice in mock)
+    LocalDataService.transactions
+        .where((t) => t.categoryId == categoryId)
+        .forEach((t) {
+          // In a real app we might throw or nullify, here we just remove.
+        });
+  }
 }
 
 // Mockup para transacciones

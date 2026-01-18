@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:finapp/features/budget/budget_controller.dart';
-import 'package:finapp/features/budget/widgets/profit_indicator.dart';
+import 'package:finapp/features/budget/widgets/vertical_bar_progress.dart';
 import 'package:finapp/core/theme/app_theme.dart';
 import 'package:intl/intl.dart';
 
-/// Card para mostrar presupuesto de una categoría
+/// Modern category budget card with vertical progress bars
 class CategoryBudgetCard extends StatelessWidget {
   final CategoryBudgetData data;
   final VoidCallback onTap;
@@ -22,11 +22,11 @@ class CategoryBudgetCard extends StatelessWidget {
     final categoryColors = theme.extension<CategoryColors>();
     final formatter = NumberFormat.currency(
       locale: 'es_CL',
-      symbol: '\$',
+      symbol: r'$',
       decimalDigits: 0,
     );
 
-    // Obtener color de categoría
+    // Get category color
     Color categoryColor = colors.primary;
     if (categoryColors != null) {
       switch (data.category.id) {
@@ -46,17 +46,20 @@ class CategoryBudgetCard extends StatelessWidget {
       }
     }
 
+    final showCaution = data.percentage >= 75 && !data.isOverBudget;
+    final showWarning = data.percentage >= 75;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: colors.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 20,
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 16,
               offset: const Offset(0, 4),
             ),
           ],
@@ -64,83 +67,110 @@ class CategoryBudgetCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header: Ícono, nombre y profit
+            // Header Row
             Row(
               children: [
+                // Category Icon
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
-                    color: categoryColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    color: categoryColor,
+                    shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    data.category.icon,
-                    color: categoryColor,
-                    size: 24,
+                    data.category.iconData,
+                    color: Colors.white,
+                    size: 20,
                   ),
                 ),
                 const SizedBox(width: 12),
+
+                // Category Name
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        data.category.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        '${formatter.format(data.spent.value)} de ${formatter.format(data.limit.value)}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    data.category.name,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-                ProfitIndicator(data: data, showPercentage: false),
+
+                // Caution Badge
+                if (showCaution) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF3CD),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Caution',
+                      style: TextStyle(
+                        color: const Color(0xFF856404),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+
+                // Percentage
+                Text(
+                  '${data.percentage.toStringAsFixed(0)}%',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: data.isOverBudget ? colors.error : categoryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
 
-            // Barra de progreso
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // Progress Label and Amount
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    value: (data.percentage / 100).clamp(0, 1),
-                    minHeight: 8,
-                    backgroundColor: colors.surfaceContainerHighest,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      data.isOverBudget ? colors.error : categoryColor,
-                    ),
+                Text(
+                  'Progress',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${data.percentage.toStringAsFixed(0)}% usado',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                    if (data.isOverBudget)
-                      Text(
-                        'Sobregasto',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colors.error,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                  ],
+                Text(
+                  '${formatter.format(data.spent.value)} / ${formatter.format(data.limit.value)}',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+
+            // Vertical Bar Progress
+            VerticalBarProgress(
+              percentage: data.percentage.clamp(0, 100),
+              height: 60,
+              color: data.isOverBudget ? colors.error : null,
+            ),
+
+            // Warning Message
+            if (showWarning) ...[
+              const SizedBox(height: 12),
+              Text(
+                data.isOverBudget
+                    ? 'Budget limit exceeded'
+                    : 'Approaching Budget limit',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.error,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
           ],
         ),
       ),

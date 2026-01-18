@@ -123,7 +123,7 @@ class _BudgetAdjustmentModalState extends State<BudgetAdjustmentModal> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      widget.data.category.icon,
+                      widget.data.category.iconData,
                       color: colors.onPrimaryContainer,
                       size: 24,
                     ),

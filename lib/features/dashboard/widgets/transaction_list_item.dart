@@ -1,4 +1,3 @@
-import 'package:finapp/core/utils/date_utils.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -50,30 +49,31 @@ class TransactionListItem extends StatelessWidget {
     final isExpense = transaction.type == TransactionType.expense;
     final isIncome = transaction.type == TransactionType.income;
     final categoryColor = _getCategoryColor(context, transaction.categoryId);
-    final relativeDate = DateFormatUtils.formatRelativeDate(transaction.date);
-
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: Row(
           children: [
-            // Icon
             Container(
-              width: 48,
-              height: 48,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: categoryColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                shape: BoxShape.circle,
               ),
               child: Icon(
-                category?.icon ??
+                category?.iconData ??
                     (isIncome
                         ? Icons.arrow_downward_rounded
                         : Icons.help_outline),
                 color: categoryColor,
-                size: 24,
+                size: 20,
               ),
             ),
             const SizedBox(width: 12),
@@ -83,85 +83,45 @@ class TransactionListItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Category name
+                  // Primary Text: Description (if exists), otherwise Category Name
                   Text(
-                    category?.name ?? (isIncome ? 'Ingreso' : 'Sin categoría'),
-                    style: TextStyle(
-                      color: colors.onSurface,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      height: 1.2,
-                    ),
+                    (transaction.description != null &&
+                            transaction.description!.isNotEmpty)
+                        ? transaction.description!
+                        : (category?.name ??
+                              (isIncome ? 'Ingreso' : 'Sin categoría')),
+                    style: Theme.of(context).textTheme.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
 
-                  // Description
-                  if (transaction.description != null &&
-                      transaction.description!.isNotEmpty)
-                    Text(
-                      transaction.description!,
-                      style: TextStyle(
-                        color: colors.onSurfaceVariant.withValues(alpha: 0.8),
-                        fontSize: 13,
-                        height: 1.2,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                  const SizedBox(height: 4),
-
-                  // Account and date
+                  // Subtitles: Category (if description was primary) and Date
                   Row(
                     children: [
-                      // Account name
-                      if (account != null) ...[
-                        Icon(
-                          account!.icon ?? Icons.account_balance_wallet,
-                          size: 12,
-                          color: colors.onSurfaceVariant.withValues(alpha: 0.6),
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            account!.name,
-                            style: TextStyle(
-                              color: colors.onSurfaceVariant.withValues(
-                                alpha: 0.7,
-                              ),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                      if (transaction.description != null &&
+                          transaction.description!.isNotEmpty) ...[
+                        Text(
+                          category?.name ??
+                              (isIncome ? 'Ingreso' : 'Sin categoría'),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                           child: Text(
                             '•',
-                            style: TextStyle(
-                              color: colors.onSurfaceVariant.withValues(
-                                alpha: 0.5,
-                              ),
-                              fontSize: 12,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: colors.onSurfaceVariant.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                ),
                           ),
                         ),
                       ],
-
-                      // Relative date
-                      Flexible(
-                        child: Text(
-                          relativeDate,
-                          style: TextStyle(
-                            color: colors.onSurfaceVariant.withValues(
-                              alpha: 0.7,
-                            ),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      Text(
+                        DateFormat('d MMM').format(transaction.date),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
                   ),
@@ -173,11 +133,9 @@ class TransactionListItem extends StatelessWidget {
             // Amount
             Text(
               '${isExpense ? '-' : '+'}${currencyFormat.format(transaction.amount.value)}',
-              style: TextStyle(
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: isExpense ? colors.error : colors.primary,
-                fontSize: 16,
                 fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
               ),
             ),
           ],

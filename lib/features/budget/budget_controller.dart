@@ -150,7 +150,7 @@ class BudgetController extends AutoDisposeNotifier<BudgetState> {
         orElse: () => const Category(
           id: 'unknown',
           name: 'Desconocido',
-          icon: Icons.help_outline,
+          icon: CategoryIcon.home,
         ),
       );
 
@@ -307,7 +307,7 @@ class BudgetController extends AutoDisposeNotifier<BudgetState> {
         final category = state.categories.firstWhere(
           (c) => c.id == t.categoryId,
           orElse: () =>
-              const Category(id: '', name: '', icon: Icons.help_outline),
+              const Category(id: '', name: '', icon: CategoryIcon.home),
         );
 
         return category.tagIds.contains(tagId) &&

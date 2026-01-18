@@ -13,6 +13,9 @@ abstract class FinanceRepository {
   List<Tag> getTags();
   List<Budget> getBudgets();
   Future<void> addTransaction(Transaction tx);
+  Future<void> addCategory(Category cat);
+  Future<void> updateCategory(Category cat);
+  Future<void> deleteCategory(String categoryId);
 }
 
 // Transactions repository

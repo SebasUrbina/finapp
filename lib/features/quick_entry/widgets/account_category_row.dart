@@ -38,7 +38,7 @@ class AccountCategoryRow extends StatelessWidget {
             onTap: onCategoryTap,
             borderRadius: BorderRadius.circular(16),
             child: SelectorCard(
-              icon: selectedCategory?.icon ?? Icons.category_outlined,
+              icon: selectedCategory?.iconData ?? Icons.category_outlined,
               label: 'Categoría',
               value: selectedCategory?.name ?? 'Seleccionar',
             ),

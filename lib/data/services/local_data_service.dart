@@ -13,7 +13,7 @@ class LocalDataService {
   ];
 
   // Tags
-  static const tags = [
+  static List<Tag> tags = [
     Tag(
       id: 'tg_fixed',
       name: 'Fijo',
@@ -53,53 +53,53 @@ class LocalDataService {
   ];
 
   // Categories
-  static const categories = [
-    Category(
+  static List<Category> categories = [
+    const Category(
       id: 'c_rent',
       name: 'Arriendo',
-      icon: Icons.home,
+      icon: CategoryIcon.home,
       tagIds: ['tg_needs', 'tg_shared', 'tg_fixed'],
     ),
-    Category(
+    const Category(
       id: 'c_supermarket',
       name: 'Supermercado',
-      icon: Icons.shopping_cart,
+      icon: CategoryIcon.shoppingCart,
       tagIds: ['tg_needs', 'tg_food', 'tg_variable'],
     ),
-    Category(
+    const Category(
       id: 'c_common_expenses',
       name: 'Gastos Comunes',
-      icon: Icons.group,
+      icon: CategoryIcon.group,
       tagIds: ['tg_shared', 'tg_fixed'],
     ),
-    Category(
+    const Category(
       id: 'c_transport',
       name: 'Transporte',
-      icon: Icons.directions_bus,
+      icon: CategoryIcon.bus,
       tagIds: ['tg_needs', 'tg_variable'],
     ),
-    Category(
+    const Category(
       id: 'c_eating_out',
       name: 'Restaurantes',
-      icon: Icons.restaurant,
+      icon: CategoryIcon.restaurant,
       tagIds: ['tg_wants', 'tg_food', 'tg_variable'],
     ),
-    Category(
+    const Category(
       id: 'c_entertainment',
       name: 'Entretenimiento',
-      icon: Icons.movie,
+      icon: CategoryIcon.movie,
       tagIds: ['tg_wants', 'tg_variable'],
     ),
-    Category(
+    const Category(
       id: 'c_health',
       name: 'Salud',
-      icon: Icons.local_hospital,
+      icon: CategoryIcon.hospital,
       tagIds: ['tg_needs', 'tg_variable'],
     ),
-    Category(
+    const Category(
       id: 'c_utilities',
       name: 'Servicios',
-      icon: Icons.receipt_long,
+      icon: CategoryIcon.receipt,
       tagIds: ['tg_needs', 'tg_fixed'],
     ),
   ];

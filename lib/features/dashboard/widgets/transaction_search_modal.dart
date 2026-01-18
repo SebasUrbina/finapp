@@ -56,7 +56,7 @@ class _TransactionSearchModalState
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Column(
         children: [
@@ -65,6 +65,9 @@ class _TransactionSearchModalState
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: colors.surface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(32),
+              ),
               border: Border(
                 bottom: BorderSide(
                   color: colors.outlineVariant.withValues(alpha: 0.5),

@@ -5,14 +5,8 @@ import 'package:flutter/material.dart';
 class CategoryBox extends StatelessWidget {
   final Category category;
   final VoidCallback onEdit;
-  final VoidCallback onTap;
 
-  const CategoryBox({
-    super.key,
-    required this.category,
-    required this.onEdit,
-    required this.onTap,
-  });
+  const CategoryBox({super.key, required this.category, required this.onEdit});
 
   Color _getCategoryColor(BuildContext context, String categoryId) {
     final categoryColors = Theme.of(context).extension<CategoryColors>()!;
@@ -32,77 +26,44 @@ class CategoryBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final colors = theme.colorScheme;
     final categoryColor = _getCategoryColor(context, category.id);
 
     return InkWell(
-      onTap: onTap,
+      onTap: onEdit, // Use onEdit for the whole box as requested
       borderRadius: BorderRadius.circular(20),
-      child: Stack(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: double.infinity,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
-              color: colors.surfaceContainerLowest,
+              color: theme.cardTheme.color,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: colors.outlineVariant.withValues(alpha: 0.2),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: categoryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    category.iconData,
-                    color: categoryColor,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  category.name,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
+            child: Center(
+              child: Icon(category.iconData, color: categoryColor, size: 32),
+            ),
           ),
-          Positioned(
-            top: 4,
-            right: 4,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onEdit,
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: colors.surfaceContainerHighest.withValues(
-                      alpha: 0.5,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.edit_rounded,
-                    size: 14,
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-              ),
+          const SizedBox(height: 8),
+          Text(
+            category.name,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+              fontSize: 12,
+              color: colors.onSurface,
             ),
           ),
         ],

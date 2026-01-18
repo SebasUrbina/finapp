@@ -75,6 +75,7 @@ class CategorySettingsModal extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     // Watch the state directly to rebuild when categories/tags change
     final state = ref.watch(dashboardControllerProvider);
@@ -82,15 +83,26 @@ class CategorySettingsModal extends ConsumerWidget {
     final allTags = state.tags;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.65,
+      ),
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        gradient: isDark
+            ? null
+            : const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFFF3E7FF), Colors.white],
+                stops: [0.0, 0.4],
+              ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 16),
           Center(
             child: Container(
               width: 48,
@@ -101,65 +113,79 @@ class CategorySettingsModal extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Categorías',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close_rounded),
-                style: IconButton.styleFrom(
-                  backgroundColor: colors.surfaceContainerHighest.withValues(
-                    alpha: 0.3,
+          const SizedBox(height: 16),
+          // Custom Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.chevron_left_rounded),
+                    style: IconButton.styleFrom(
+                      backgroundColor: theme.cardTheme.color,
+                      foregroundColor: colors.onSurface,
+                      padding: const EdgeInsets.all(12),
+                      elevation: 2,
+                      shadowColor: Colors.black12,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Organiza y personaliza tus gastos',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colors.onSurfaceVariant,
+                Text(
+                  'Seleccionar Categoría',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colors.onSurface,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 4),
+          Center(
+            child: Text(
+              'Organiza y personaliza tus categorías',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colors.onSurfaceVariant,
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
 
-          Flexible(
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const BouncingScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: 0.8,
-              ),
-              itemCount: categories.length + 1,
-              itemBuilder: (context, index) {
-                if (index == categories.length) {
-                  return AddCategoryBox(
-                    onTap: () => _showAddCategory(context, ref, allTags),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: GridView.builder(
+                shrinkWrap: true,
+                padding: const EdgeInsets.only(bottom: 40),
+                physics: const BouncingScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 24,
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: categories.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    // Add is first in the image
+                    return AddCategoryBox(
+                      onTap: () => _showAddCategory(context, ref, allTags),
+                    );
+                  }
+                  final category = categories[index - 1];
+                  return CategoryBox(
+                    category: category,
+                    onEdit: () =>
+                        _showEditCategory(context, ref, category, allTags),
                   );
-                }
-                final category = categories[index];
-                return CategoryBox(
-                  category: category,
-                  onEdit: () =>
-                      _showEditCategory(context, ref, category, allTags),
-                  onTap: () {},
-                );
-              },
+                },
+              ),
             ),
           ),
-          const SizedBox(height: 20),
         ],
       ),
     );

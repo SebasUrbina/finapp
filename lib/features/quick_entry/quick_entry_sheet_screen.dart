@@ -86,7 +86,9 @@ class QuickEntrySheet extends ConsumerWidget {
               ],
               const SizedBox(height: 24),
               SaveButton(
-                isRecurring: state.isRecurring,
+                label: state.isRecurring
+                    ? 'Guardar Recurrente'
+                    : 'Guardar Transacción',
                 onPressed: state.canSubmit
                     ? () async {
                         await notifier.submit();

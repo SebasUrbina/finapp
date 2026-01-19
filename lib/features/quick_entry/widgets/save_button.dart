@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 
 class SaveButton extends StatelessWidget {
-  final bool isRecurring;
   final VoidCallback? onPressed;
+  final String label;
 
-  const SaveButton({
-    super.key,
-    required this.isRecurring,
-    required this.onPressed,
-  });
+  const SaveButton({super.key, required this.onPressed, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +25,7 @@ class SaveButton extends StatelessWidget {
           ),
         ),
         child: Text(
-          isRecurring ? 'Guardar gasto recurrente' : 'Guardar transacción',
+          label,
           style: theme.textTheme.labelLarge?.copyWith(
             fontWeight: FontWeight.w600,
           ),

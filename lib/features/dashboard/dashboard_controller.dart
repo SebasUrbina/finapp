@@ -131,7 +131,7 @@ class DashboardController extends StateNotifier<DashboardState> {
 
   /// Balance (income - expenses)
   Money get balance {
-    return Money(totalIncome.cents - totalExpenses.cents);
+    return Money(totalIncome.value - totalExpenses.value);
   }
 
   /// Transaction count for the period
@@ -146,7 +146,7 @@ class DashboardController extends StateNotifier<DashboardState> {
 
     if (days == 0) return const Money(0);
 
-    return Money(totalExpenses.cents ~/ days);
+    return Money(totalExpenses.value / days);
   }
 
   /// Expenses grouped by category
@@ -176,7 +176,7 @@ class DashboardController extends StateNotifier<DashboardState> {
 
     // Sort by amount (highest first)
     final sortedEntries = result.entries.toList()
-      ..sort((a, b) => b.value.cents.compareTo(a.value.cents));
+      ..sort((a, b) => b.value.value.compareTo(a.value.value));
 
     return Map.fromEntries(sortedEntries);
   }
@@ -207,9 +207,9 @@ class DashboardController extends StateNotifier<DashboardState> {
 
   /// Savings rate as percentage (0-100)
   double get savingsRate {
-    if (totalIncome.cents == 0) return 0;
-    final savings = totalIncome.cents - totalExpenses.cents;
-    return (savings / totalIncome.cents * 100).clamp(0, 100);
+    if (totalIncome.value == 0) return 0;
+    final savings = totalIncome.value - totalExpenses.value;
+    return (savings / totalIncome.value * 100).clamp(0, 100);
   }
 
   /// Get spending trend data for the last 6 periods

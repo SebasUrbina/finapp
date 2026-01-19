@@ -1,7 +1,7 @@
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/core/theme/app_theme.dart';
+import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class CategoryExpenseItem extends StatelessWidget {
   final Category category;
@@ -36,11 +36,6 @@ class CategoryExpenseItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final currencyFormat = NumberFormat.currency(
-      symbol: r'$',
-      decimalDigits: 0,
-      locale: 'es_CL',
-    );
 
     final categoryColor = _getCategoryColor(context, category.id);
 
@@ -104,7 +99,7 @@ class CategoryExpenseItem extends StatelessWidget {
 
               // Amount
               Text(
-                currencyFormat.format(amount.value),
+                amount.toCurrency(),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: colors.onSurface,

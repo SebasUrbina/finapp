@@ -1,9 +1,9 @@
+import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/dashboard/transaction_search/transaction_search_provider.dart';
 import 'package:finapp/features/dashboard/widgets/transaction_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 class TransactionSearchModal extends ConsumerStatefulWidget {
   final List<Transaction> transactions;
@@ -200,12 +200,6 @@ class _TransactionSearchModalState
         .where((t) => t.type == TransactionType.income)
         .fold<Money>(const Money(0), (sum, t) => sum + t.amount);
 
-    final currencyFormat = NumberFormat.currency(
-      symbol: r'$',
-      decimalDigits: 0,
-      locale: 'es_CL',
-    );
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -223,16 +217,16 @@ class _TransactionSearchModalState
                 ),
               ),
               const Spacer(),
-              if (totalExpenses.cents > 0)
+              if (totalExpenses.value > 0)
                 Text(
-                  currencyFormat.format(totalExpenses.value),
+                  totalExpenses.toCurrency(),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colors.error,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              if (totalIncome.cents > 0) ...[
-                if (totalExpenses.cents > 0)
+              if (totalIncome.value > 0) ...[
+                if (totalExpenses.value > 0)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Text(
@@ -243,7 +237,7 @@ class _TransactionSearchModalState
                     ),
                   ),
                 Text(
-                  currencyFormat.format(totalIncome.value),
+                  totalIncome.toCurrency(),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colors.primary,
                     fontWeight: FontWeight.w600,

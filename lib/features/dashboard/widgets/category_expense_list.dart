@@ -26,9 +26,9 @@ class CategoryExpenseList extends StatelessWidget {
       children: items.map((entry) {
         final category = entry.key;
         final amount = entry.value;
-        final totalCents = totalExpenses.cents;
-        final percentage = totalCents > 0
-            ? (amount.cents / totalCents * 100)
+        final totalValue = totalExpenses.value;
+        final percentage = totalValue > 0
+            ? (amount.value / totalValue * 100)
             : 0.0;
 
         return Padding(

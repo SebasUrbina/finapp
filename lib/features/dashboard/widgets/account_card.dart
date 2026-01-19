@@ -1,7 +1,7 @@
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/dashboard/dashboard_state.dart';
+import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class AccountCard extends StatelessWidget {
   final Account? account; // null = "General" card
@@ -23,12 +23,6 @@ class AccountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(
-      symbol: r'$',
-      decimalDigits: 0,
-      locale: 'es_CL',
-    );
-
     // Determine card gradient based on account
     final gradient = _getCardGradient(context);
     final isGeneral = account == null;
@@ -75,7 +69,7 @@ class AccountCard extends StatelessWidget {
 
                 // Balance
                 Text(
-                  currencyFormat.format(balance.value),
+                  balance.toCurrency(),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 28,
@@ -90,17 +84,11 @@ class AccountCard extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: _buildStatItem(
-                        'Ingresos',
-                        currencyFormat.format(income.value),
-                      ),
+                      child: _buildStatItem('Ingresos', income.toCurrency()),
                     ),
                     const SizedBox(width: 24),
                     Expanded(
-                      child: _buildStatItem(
-                        'Gastos',
-                        currencyFormat.format(expenses.value),
-                      ),
+                      child: _buildStatItem('Gastos', expenses.toCurrency()),
                     ),
                   ],
                 ),

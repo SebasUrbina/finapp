@@ -1,5 +1,6 @@
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/core/theme/app_theme.dart';
+import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -40,11 +41,6 @@ class TransactionListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final currencyFormat = NumberFormat.currency(
-      symbol: r'$',
-      decimalDigits: 0,
-      locale: 'es_CL',
-    );
 
     final isExpense = transaction.type == TransactionType.expense;
     final isIncome = transaction.type == TransactionType.income;
@@ -132,7 +128,7 @@ class TransactionListItem extends StatelessWidget {
 
             // Amount
             Text(
-              '${isExpense ? '-' : '+'}${currencyFormat.format(transaction.amount.value)}',
+              '${isExpense ? '-' : '+'}${transaction.amount.toCurrency()}',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: isExpense ? colors.error : colors.primary,
                 fontWeight: FontWeight.bold,

@@ -103,19 +103,43 @@ class Transaction {
     this.split,
     this.recurringRuleId,
   });
+
+  Transaction copyWith({
+    String? id,
+    Money? amount,
+    TransactionType? type,
+    DateTime? date,
+    String? accountId,
+    String? toAccountId,
+    String? categoryId,
+    String? description,
+    Split? split,
+    String? recurringRuleId,
+  }) {
+    return Transaction(
+      id: id ?? this.id,
+      amount: amount ?? this.amount,
+      type: type ?? this.type,
+      date: date ?? this.date,
+      accountId: accountId ?? this.accountId,
+      toAccountId: toAccountId ?? this.toAccountId,
+      categoryId: categoryId ?? this.categoryId,
+      description: description ?? this.description,
+      split: split ?? this.split,
+      recurringRuleId: recurringRuleId ?? this.recurringRuleId,
+    );
+  }
 }
 
 enum TransactionType { expense, income, transfer }
 
 // Money
 class Money {
-  final int cents; // CLP no usa decimales, pero esto escala
+  final double value;
 
-  const Money(this.cents);
+  const Money(this.value);
 
-  double get value => cents / 100;
-
-  Money operator +(Money other) => Money(cents + other.cents);
+  Money operator +(Money other) => Money(value + other.value);
 }
 
 // Splits

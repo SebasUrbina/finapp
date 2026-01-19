@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/data/providers/finance_providers.dart';
 import 'package:finapp/features/quick_entry/quick_entry_state.dart';
+import 'package:finapp/features/dashboard/dashboard_controller.dart';
 
 // Usamos AutoDisposeNotifier para que se dispare el dispose cuando el widget se desmonte
 // Recomendado siempre que el notifier tenga un estado que depende de providers
@@ -36,7 +37,7 @@ class QuickEntryController extends AutoDisposeNotifier<QuickEntryState> {
       id: DateTime.now().toIso8601String(),
       accountId: state.selectedAccount!.id,
       categoryId: state.selectedCategory!.id,
-      amount: Money(state.amount.toInt()),
+      amount: Money(state.amount),
       date: state.selectedDate,
       type: state.type,
       description: state.description,
@@ -47,6 +48,7 @@ class QuickEntryController extends AutoDisposeNotifier<QuickEntryState> {
     // Invalidamos para que los demas providers se enteren del cambio
     ref.invalidate(transactionsProvider);
     ref.invalidate(accountsProvider);
+    ref.read(dashboardControllerProvider.notifier).refresh();
   }
 }
 

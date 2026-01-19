@@ -8,12 +8,19 @@ import 'package:finapp/features/dashboard/widgets/account_card_stack.dart';
 import 'package:finapp/features/dashboard/widgets/transaction_search_modal.dart';
 import 'package:finapp/features/dashboard/widgets/section_header.dart';
 import 'package:finapp/features/dashboard/widgets/dark_mode_switcher.dart';
+import 'package:finapp/features/transaction_edit/transaction_edit_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class RecentTransactionsList extends ConsumerWidget {
   final List<Transaction> transactions;
-  const RecentTransactionsList({super.key, required this.transactions});
+  final void Function(Transaction)? onTransactionTap;
+
+  const RecentTransactionsList({
+    super.key,
+    required this.transactions,
+    this.onTransactionTap,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -53,6 +60,9 @@ class RecentTransactionsList extends ConsumerWidget {
               transaction: transaction,
               category: category,
               account: account,
+              onTap: onTransactionTap != null
+                  ? () => onTransactionTap!(transaction)
+                  : null,
             ),
           ),
         );
@@ -158,6 +168,7 @@ class DashboardScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 RecentTransactionsList(
                   transactions: controller.filteredTransactions,
+                  onTransactionTap: (tx) => _showTransactionEdit(context, tx),
                 ),
                 const SizedBox(height: 24),
                 SectionHeader(
@@ -201,6 +212,16 @@ class DashboardScreen extends ConsumerWidget {
         categories: state.categories,
         accounts: state.accounts,
       ),
+    );
+  }
+
+  // Transaction Edit Modal
+  void _showTransactionEdit(BuildContext context, Transaction transaction) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => TransactionEditSheet(transaction: transaction),
     );
   }
 }

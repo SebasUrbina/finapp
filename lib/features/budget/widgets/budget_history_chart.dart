@@ -18,10 +18,10 @@ class BudgetHistoryChart extends StatelessWidget {
     }
 
     // Encontrar el valor máximo para escalar
-    final maxValue = history.fold<int>(
+    final maxValue = history.fold<double>(
       0,
-      (max, data) =>
-          math.max(max, math.max(data.budgeted.cents, data.spent.cents)),
+      (maxVal, data) =>
+          math.max(maxVal, math.max(data.budgeted.value, data.spent.value)),
     );
 
     return Container(
@@ -31,12 +31,12 @@ class BudgetHistoryChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: history.map((data) {
           final budgetedHeight = maxValue > 0
-              ? (data.budgeted.cents / maxValue * 150).clamp(4.0, 150.0)
+              ? (data.budgeted.value / maxValue * 150).clamp(4.0, 150.0)
               : 4.0;
           final spentHeight = maxValue > 0
-              ? (data.spent.cents / maxValue * 150).clamp(4.0, 150.0)
+              ? (data.spent.value / maxValue * 150).clamp(4.0, 150.0)
               : 4.0;
-          final isOverBudget = data.spent.cents > data.budgeted.cents;
+          final isOverBudget = data.spent.value > data.budgeted.value;
 
           return Expanded(
             child: Padding(

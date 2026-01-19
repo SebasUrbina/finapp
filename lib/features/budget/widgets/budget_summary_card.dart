@@ -1,6 +1,6 @@
+import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:finapp/features/budget/budget_controller.dart';
-import 'package:intl/intl.dart';
 
 /// Card de resumen general de presupuesto
 class BudgetSummaryCard extends StatelessWidget {
@@ -12,17 +12,12 @@ class BudgetSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final formatter = NumberFormat.currency(
-      locale: 'es_CL',
-      symbol: '\$',
-      decimalDigits: 0,
-    );
 
     final totalBudgeted = controller.totalBudgeted;
     final totalSpent = controller.totalSpent;
     final profit = controller.overallProfit;
     final percentage = controller.overallPercentage;
-    final isProfit = profit.cents >= 0;
+    final isProfit = profit.value >= 0;
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -61,7 +56,7 @@ class BudgetSummaryCard extends StatelessWidget {
                 child: _buildSummaryItem(
                   context,
                   'Presupuestado',
-                  formatter.format(totalBudgeted.value),
+                  totalBudgeted.toCurrency(),
                   colors.onPrimaryContainer.withValues(alpha: 0.7),
                 ),
               ),
@@ -70,7 +65,7 @@ class BudgetSummaryCard extends StatelessWidget {
                 child: _buildSummaryItem(
                   context,
                   'Gastado',
-                  formatter.format(totalSpent.value),
+                  totalSpent.toCurrency(),
                   colors.onPrimaryContainer.withValues(alpha: 0.7),
                 ),
               ),
@@ -102,7 +97,7 @@ class BudgetSummaryCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        formatter.format(profit.value.abs()),
+                        CurrencyFormatter.formatDouble(profit.value.abs()),
                         style: theme.textTheme.headlineSmall?.copyWith(
                           color: isProfit ? colors.tertiary : colors.error,
                           fontWeight: FontWeight.bold,

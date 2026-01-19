@@ -40,7 +40,7 @@ class _BudgetAdjustmentModalState extends State<BudgetAdjustmentModal> {
     setState(() => _isLoading = true);
 
     try {
-      final newLimit = Money((_budgetAmount * 100).toInt());
+      final newLimit = Money(_budgetAmount);
       await widget.controller.updateBudgetLimit(
         widget.data.budget.id,
         newLimit,

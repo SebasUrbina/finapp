@@ -155,14 +155,14 @@ class BudgetController extends AutoDisposeNotifier<BudgetState> {
       );
 
       final spent = _getSpentForBudget(budget);
-      final percentage = budget.limit.cents > 0
-          ? (spent.cents / budget.limit.cents * 100).toDouble().clamp(
+      final percentage = budget.limit.value > 0
+          ? (spent.value / budget.limit.value * 100).toDouble().clamp(
               0.0,
               200.0,
             )
           : 0.0;
-      final profit = Money(budget.limit.cents - spent.cents);
-      final isOverBudget = spent.cents > budget.limit.cents;
+      final profit = Money(budget.limit.value - spent.value);
+      final isOverBudget = spent.value > budget.limit.value;
 
       result.add(
         CategoryBudgetData(
@@ -188,27 +188,27 @@ class BudgetController extends AutoDisposeNotifier<BudgetState> {
     if (filteredBudgets.isEmpty) return const Money(0);
     return filteredBudgets
         .map((b) => b.limit)
-        .reduce((a, b) => Money(a.cents + b.cents));
+        .reduce((a, b) => Money(a.value + b.value));
   }
 
   /// Total gastado
   Money get totalSpent {
-    final total = categoryBudgets.fold<int>(
+    final total = categoryBudgets.fold<double>(
       0,
-      (sum, data) => sum + data.spent.cents,
+      (sum, data) => sum + data.spent.value,
     );
     return Money(total);
   }
 
   /// Profit general
   Money get overallProfit {
-    return Money(totalBudgeted.cents - totalSpent.cents);
+    return Money(totalBudgeted.value - totalSpent.value);
   }
 
   /// Porcentaje de uso general
   double get overallPercentage {
-    if (totalBudgeted.cents == 0) return 0;
-    return (totalSpent.cents / totalBudgeted.cents * 100).toDouble().clamp(
+    if (totalBudgeted.value == 0) return 0;
+    return (totalSpent.value / totalBudgeted.value * 100).toDouble().clamp(
       0.0,
       200.0,
     );
@@ -320,7 +320,7 @@ class BudgetController extends AutoDisposeNotifier<BudgetState> {
 
     return relevantTransactions
         .map((t) => t.amount)
-        .reduce((a, b) => Money(a.cents + b.cents));
+        .reduce((a, b) => Money(a.value + b.value));
   }
 }
 

@@ -1,17 +1,40 @@
+import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
 
-class AmountInput extends StatelessWidget {
+class AmountInput extends StatefulWidget {
   final double value;
   final ValueChanged<double> onChanged;
 
   const AmountInput({super.key, required this.value, required this.onChanged});
 
   @override
+  State<AmountInput> createState() => _AmountInputState();
+}
+
+class _AmountInputState extends State<AmountInput> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    // Inicializar con el valor formateado
+    final initialText = widget.value > 0 ? widget.value.toFormatted() : '';
+    _controller = TextEditingController(text: initialText);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     return TextField(
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      controller: _controller,
+      keyboardType: TextInputType.number,
       textAlign: TextAlign.start,
       style: TextStyle(
         fontSize: 48,
@@ -30,8 +53,22 @@ class AmountInput extends StatelessWidget {
         border: InputBorder.none,
       ),
       onChanged: (v) {
-        final parsed = double.tryParse(v.replaceAll(',', '.'));
-        onChanged(parsed ?? 0);
+        if (v.isEmpty) {
+          widget.onChanged(0);
+          return;
+        }
+
+        final parsed = CurrencyFormatter.parse(v);
+        widget.onChanged(parsed);
+
+        // Formatear mientras se escribe
+        final formatted = parsed.toFormatted();
+        if (v != formatted) {
+          _controller.value = TextEditingValue(
+            text: formatted,
+            selection: TextSelection.collapsed(offset: formatted.length),
+          );
+        }
       },
     );
   }

@@ -1,8 +1,8 @@
+import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:finapp/features/dashboard/dashboard_controller.dart';
 import 'package:finapp/features/dashboard/dashboard_state.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class FinancialSummaryCard extends StatelessWidget {
   final DashboardController controller;
@@ -20,11 +20,6 @@ class FinancialSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final currencyFormat = NumberFormat.currency(
-      symbol: r'$',
-      decimalDigits: 0,
-      locale: 'es_CL',
-    );
 
     final income = controller.totalIncome;
     final expenses = controller.totalExpenses;
@@ -77,7 +72,7 @@ class FinancialSummaryCard extends StatelessWidget {
                     _buildFinancialRow(
                       context,
                       'Ingresos',
-                      currencyFormat.format(income.value),
+                      income.toCurrency(),
                       colors.primary,
                       Icons.arrow_downward_rounded,
                     ),
@@ -85,7 +80,7 @@ class FinancialSummaryCard extends StatelessWidget {
                     _buildFinancialRow(
                       context,
                       'Gastos',
-                      currencyFormat.format(expenses.value),
+                      expenses.toCurrency(),
                       colors.error,
                       Icons.arrow_upward_rounded,
                     ),
@@ -98,8 +93,8 @@ class FinancialSummaryCard extends StatelessWidget {
                     _buildFinancialRow(
                       context,
                       'Ahorro',
-                      currencyFormat.format(savings.value),
-                      savings.cents >= 0 ? colors.primary : colors.error,
+                      savings.toCurrency(),
+                      savings.value >= 0 ? colors.primary : colors.error,
                       Icons.savings_outlined,
                     ),
                     const SizedBox(height: 8),
@@ -201,9 +196,8 @@ class FinancialSummaryCard extends StatelessWidget {
 
     // Find max value for scaling
     final maxAmount = trendData
-        .map((d) => d.amount.cents)
-        .reduce((a, b) => a > b ? a : b)
-        .toDouble();
+        .map((d) => d.amount.value)
+        .reduce((a, b) => a > b ? a : b);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,7 +265,7 @@ class FinancialSummaryCard extends StatelessWidget {
                   x: index,
                   barRods: [
                     BarChartRodData(
-                      toY: data.amount.cents.toDouble(),
+                      toY: data.amount.value,
                       color: isCurrentPeriod
                           ? colors.primary
                           : colors.primary.withValues(alpha: 0.4),

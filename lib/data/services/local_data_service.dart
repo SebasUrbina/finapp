@@ -110,7 +110,7 @@ class LocalDataService {
       id: 'a_rut',
       name: 'Cuenta RUT',
       type: AccountType.debit,
-      balance: Money(120000000),
+      balance: Money(1200000),
       icon: Icons.account_balance,
       color: Colors.blue,
     ),
@@ -118,7 +118,7 @@ class LocalDataService {
       id: 'a_fin',
       name: 'Fintual',
       type: AccountType.digitalWallet,
-      balance: Money(2400000000),
+      balance: Money(24000000),
       icon: Icons.trending_up,
       color: Colors.green,
     ),
@@ -126,7 +126,7 @@ class LocalDataService {
       id: 'a_bci',
       name: 'BCI',
       type: AccountType.debit,
-      balance: Money(1200000000),
+      balance: Money(12000000),
       icon: Icons.account_balance,
       color: Colors.orange,
     ),
@@ -134,7 +134,7 @@ class LocalDataService {
       id: 'a_banco',
       name: 'Banco de Chile',
       type: AccountType.debit,
-      balance: Money(1250000000),
+      balance: Money(12500000),
       icon: Icons.account_balance,
       color: Colors.red,
     ),
@@ -142,11 +142,11 @@ class LocalDataService {
       id: 'a_credit',
       name: 'Tarjeta Crédito',
       type: AccountType.creditCard,
-      balance: Money(-350000000), // Negative balance for credit card
+      balance: Money(-350000), // Negative balance for credit card
       icon: Icons.credit_card,
       color: Colors.purple,
       creditInfo: CreditCardInfo(
-        creditLimit: Money(150000000),
+        creditLimit: Money(1500000),
         closingDay: 15,
         dueDay: 5,
       ),
@@ -155,7 +155,7 @@ class LocalDataService {
       id: 'a_cash',
       name: 'Efectivo',
       type: AccountType.cash,
-      balance: Money(45000000),
+      balance: Money(45000),
       icon: Icons.payments,
       color: Colors.amber,
     ),
@@ -166,49 +166,49 @@ class LocalDataService {
     Budget(
       id: 'b_food_monthly',
       target: TagBudgetTarget('tg_food'),
-      limit: const Money(25000000), // $250.000
+      limit: const Money(250000),
       period: BudgetPeriod.monthly,
     ),
     Budget(
       id: 'b_rent_monthly',
       target: CategoryBudgetTarget('c_rent'),
-      limit: const Money(45000000), // $450.000
+      limit: const Money(450000),
       period: BudgetPeriod.monthly,
     ),
     Budget(
       id: 'b_transport_monthly',
       target: CategoryBudgetTarget('c_transport'),
-      limit: const Money(8000000), // $80.000
+      limit: const Money(80000),
       period: BudgetPeriod.monthly,
     ),
     Budget(
       id: 'b_restaurants_monthly',
       target: CategoryBudgetTarget('c_eating_out'),
-      limit: const Money(10000000), // $100.000
+      limit: const Money(100000),
       period: BudgetPeriod.monthly,
     ),
     Budget(
       id: 'b_entertainment_monthly',
       target: CategoryBudgetTarget('c_entertainment'),
-      limit: const Money(12000000), // $120.000
+      limit: const Money(120000),
       period: BudgetPeriod.monthly,
     ),
     Budget(
       id: 'b_health_monthly',
       target: CategoryBudgetTarget('c_health'),
-      limit: const Money(15000000), // $150.000
+      limit: const Money(150000),
       period: BudgetPeriod.monthly,
     ),
     Budget(
       id: 'b_utilities_monthly',
       target: CategoryBudgetTarget('c_utilities'),
-      limit: const Money(10000000), // $100.000
+      limit: const Money(100000),
       period: BudgetPeriod.monthly,
     ),
     Budget(
       id: 'b_supermarket_monthly',
       target: CategoryBudgetTarget('c_supermarket'),
-      limit: const Money(30000000), // $300.000
+      limit: const Money(300000),
       period: BudgetPeriod.monthly,
     ),
   ];
@@ -218,7 +218,7 @@ class LocalDataService {
     // Income
     Transaction(
       id: 't_income_1',
-      amount: Money(180000000), // $1,800,000
+      amount: Money(1800000),
       type: TransactionType.income,
       date: DateTime(2026, 1, 1),
       accountId: 'a_banco',
@@ -226,7 +226,7 @@ class LocalDataService {
     ),
     Transaction(
       id: 't_income_2',
-      amount: Money(50000000), // $500,000
+      amount: Money(500000),
       type: TransactionType.income,
       date: DateTime(2026, 1, 5),
       accountId: 'a_rut',
@@ -236,7 +236,7 @@ class LocalDataService {
     // Expenses - January
     Transaction(
       id: 't1',
-      amount: Money(45000000), // $450,000
+      amount: Money(450000),
       type: TransactionType.expense,
       date: DateTime(2026, 1, 2),
       accountId: 'a_rut',
@@ -252,7 +252,7 @@ class LocalDataService {
     ),
     Transaction(
       id: 't2',
-      amount: Money(12000000), // $120,000
+      amount: Money(120000),
       type: TransactionType.expense,
       date: DateTime(2026, 1, 3),
       accountId: 'a_credit',
@@ -261,7 +261,7 @@ class LocalDataService {
     ),
     Transaction(
       id: 't3',
-      amount: Money(1800000), // $18,000
+      amount: Money(18000),
       type: TransactionType.expense,
       date: DateTime(2026, 1, 4),
       accountId: 'a_cash',
@@ -270,7 +270,7 @@ class LocalDataService {
     ),
     Transaction(
       id: 't4',
-      amount: Money(3500000), // $35,000
+      amount: Money(35000),
       type: TransactionType.expense,
       date: DateTime(2026, 1, 5),
       accountId: 'a_credit',
@@ -286,7 +286,7 @@ class LocalDataService {
     ),
     Transaction(
       id: 't5',
-      amount: Money(8500000), // $85,000
+      amount: Money(85000),
       type: TransactionType.expense,
       date: DateTime(2026, 1, 6),
       accountId: 'a_bci',
@@ -295,7 +295,7 @@ class LocalDataService {
     ),
     Transaction(
       id: 't6',
-      amount: Money(6500000), // $65,000
+      amount: Money(65000),
       type: TransactionType.expense,
       date: DateTime(2026, 1, 7),
       accountId: 'a_rut',
@@ -304,7 +304,7 @@ class LocalDataService {
     ),
     Transaction(
       id: 't7',
-      amount: Money(2500000), // $25,000
+      amount: Money(25000),
       type: TransactionType.expense,
       date: DateTime(2026, 1, 8),
       accountId: 'a_cash',
@@ -313,7 +313,7 @@ class LocalDataService {
     ),
     Transaction(
       id: 't8',
-      amount: Money(15000000), // $150,000
+      amount: Money(15000),
       type: TransactionType.expense,
       date: DateTime(2026, 1, 9),
       accountId: 'a_credit',
@@ -322,7 +322,7 @@ class LocalDataService {
     ),
     Transaction(
       id: 't9',
-      amount: Money(4500000), // $45,000
+      amount: Money(4500),
       type: TransactionType.expense,
       date: DateTime(2026, 1, 10),
       accountId: 'a_rut',
@@ -331,7 +331,7 @@ class LocalDataService {
     ),
     Transaction(
       id: 't10',
-      amount: Money(8000000), // $80,000
+      amount: Money(80000),
       type: TransactionType.expense,
       date: DateTime(2026, 1, 10),
       accountId: 'a_bci',

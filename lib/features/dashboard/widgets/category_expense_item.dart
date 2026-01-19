@@ -1,5 +1,4 @@
 import 'package:finapp/domain/models/finance_models.dart';
-import 'package:finapp/core/theme/app_theme.dart';
 import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
 
@@ -15,29 +14,12 @@ class CategoryExpenseItem extends StatelessWidget {
     required this.percentage,
   });
 
-  Color _getCategoryColor(BuildContext context, String categoryId) {
-    final categoryColors = Theme.of(context).extension<CategoryColors>()!;
-
-    final colorMap = {
-      'c_rent': categoryColors.entertainment,
-      'c_supermarket': categoryColors.food,
-      'c_common_expenses': categoryColors.transport,
-      'c_transport': categoryColors.transport,
-      'c_eating_out': categoryColors.food,
-      'c_entertainment': categoryColors.entertainment,
-      'c_health': categoryColors.health,
-      'c_utilities': categoryColors.utilities,
-    };
-
-    return colorMap[categoryId] ?? Theme.of(context).colorScheme.primary;
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    final categoryColor = _getCategoryColor(context, category.id);
+    final categoryColor = category.getColor(context);
 
     return Container(
       padding: const EdgeInsets.all(12), // Reducido para igualar transacciones

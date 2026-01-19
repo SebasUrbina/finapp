@@ -41,6 +41,9 @@ class Category {
   });
 
   IconData get iconData => CategoryIconMapper.toIcon(icon);
+  
+  Color getColor(BuildContext context) =>
+      CategoryIconMapper.toColor(icon, context);
 }
 
 // Note: No usamos subcategorias porque

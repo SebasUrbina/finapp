@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:finapp/domain/models/finance_models.dart';
+import 'package:finapp/core/theme/app_theme.dart';
 
 class CategoryIconMapper {
   static const Map<CategoryIcon, IconData> _icons = {
@@ -27,5 +28,53 @@ class CategoryIconMapper {
 
   static IconData toIcon(CategoryIcon icon) {
     return _icons[icon] ?? Icons.help_outline;
+  }
+
+  static Color toColor(CategoryIcon icon, BuildContext context) {
+    final categoryColors = Theme.of(context).extension<CategoryColors>();
+    if (categoryColors == null) return Theme.of(context).colorScheme.primary;
+
+    switch (icon) {
+      case CategoryIcon.home:
+        return categoryColors.utilities;
+      case CategoryIcon.shoppingCart:
+        return categoryColors.shopping;
+      case CategoryIcon.group:
+        return categoryColors.other;
+      case CategoryIcon.bus:
+        return categoryColors.transport;
+      case CategoryIcon.restaurant:
+        return categoryColors.food;
+      case CategoryIcon.movie:
+        return categoryColors.entertainment;
+      case CategoryIcon.hospital:
+        return categoryColors.health;
+      case CategoryIcon.receipt:
+        return categoryColors.utilities;
+      case CategoryIcon.payments:
+        return categoryColors.utilities;
+      case CategoryIcon.trendingUp:
+        return categoryColors.food;
+      case CategoryIcon.bank:
+        return categoryColors.transport;
+      case CategoryIcon.creditCard:
+        return categoryColors.shopping;
+      case CategoryIcon.school:
+        return categoryColors.education;
+      case CategoryIcon.fitness:
+        return categoryColors.health;
+      case CategoryIcon.flight:
+        return categoryColors.transport;
+      case CategoryIcon.car:
+        return categoryColors.transport;
+      case CategoryIcon.pets:
+        return categoryColors.health;
+      case CategoryIcon.tools:
+        return categoryColors.utilities;
+      case CategoryIcon.redeem:
+        return categoryColors.shopping;
+      case CategoryIcon.laptop:
+        return categoryColors.entertainment;
+    }
   }
 }

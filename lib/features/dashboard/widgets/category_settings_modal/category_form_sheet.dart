@@ -118,16 +118,28 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
                     margin: const EdgeInsets.only(right: 12),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? colors.primary
+                          ? CategoryIconMapper.toColor(
+                              iconEnum,
+                              context,
+                            ).withValues(alpha: 0.2)
                           : colors.surfaceContainerHighest.withValues(
                               alpha: 0.3,
                             ),
                       borderRadius: BorderRadius.circular(12),
+                      border: isSelected
+                          ? Border.all(
+                              color: CategoryIconMapper.toColor(
+                                iconEnum,
+                                context,
+                              ),
+                              width: 2,
+                            )
+                          : null,
                     ),
                     child: Icon(
                       CategoryIconMapper.toIcon(iconEnum),
                       color: isSelected
-                          ? colors.onPrimary
+                          ? CategoryIconMapper.toColor(iconEnum, context)
                           : colors.onSurfaceVariant,
                     ),
                   ),

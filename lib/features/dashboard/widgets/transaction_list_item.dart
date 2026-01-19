@@ -1,5 +1,4 @@
 import 'package:finapp/domain/models/finance_models.dart';
-import 'package:finapp/core/theme/app_theme.dart';
 import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -18,33 +17,13 @@ class TransactionListItem extends StatelessWidget {
     this.onTap,
   });
 
-  Color _getCategoryColor(BuildContext context, String? categoryId) {
-    final categoryColors = Theme.of(context).extension<CategoryColors>()!;
-
-    if (categoryId == null) return Theme.of(context).colorScheme.primary;
-
-    // Assign colors based on category
-    final colorMap = {
-      'c_rent': categoryColors.entertainment,
-      'c_supermarket': categoryColors.food,
-      'c_common_expenses': categoryColors.transport,
-      'c_transport': categoryColors.transport,
-      'c_eating_out': categoryColors.food,
-      'c_entertainment': categoryColors.entertainment,
-      'c_health': categoryColors.health,
-      'c_utilities': categoryColors.utilities,
-    };
-
-    return colorMap[categoryId] ?? Theme.of(context).colorScheme.primary;
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
     final isExpense = transaction.type == TransactionType.expense;
     final isIncome = transaction.type == TransactionType.income;
-    final categoryColor = _getCategoryColor(context, transaction.categoryId);
+    final categoryColor = category?.getColor(context) ?? colors.primary;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),

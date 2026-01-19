@@ -12,7 +12,11 @@ abstract class FinanceRepository {
   List<Category> getCategories();
   List<Tag> getTags();
   List<Budget> getBudgets();
+  // Crud transaction
   Future<void> addTransaction(Transaction tx);
+  Future<void> updateTransaction(Transaction tx);
+  Future<void> deleteTransaction(String transactionId);
+  // Crud category
   Future<void> addCategory(Category cat);
   Future<void> updateCategory(Category cat);
   Future<void> deleteCategory(String categoryId);

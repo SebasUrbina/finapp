@@ -29,6 +29,21 @@ class FinanceRepositoryLocal implements FinanceRepository {
   }
 
   @override
+  Future<void> updateTransaction(Transaction tx) async {
+    final index = LocalDataService.transactions.indexWhere(
+      (t) => t.id == tx.id,
+    );
+    if (index != -1) {
+      LocalDataService.transactions[index] = tx;
+    }
+  }
+
+  @override
+  Future<void> deleteTransaction(String transactionId) async {
+    LocalDataService.transactions.removeWhere((t) => t.id == transactionId);
+  }
+
+  @override
   Future<void> addCategory(Category cat) async {
     LocalDataService.categories.add(cat);
   }

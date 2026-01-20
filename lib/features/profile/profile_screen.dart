@@ -4,6 +4,7 @@ import 'providers/profile_provider.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/premium_banner.dart';
 import 'widgets/settings_widgets.dart';
+import '../accounts/account_list_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -39,6 +40,17 @@ class ProfileScreen extends ConsumerWidget {
                     icon: Icons.key_outlined,
                     title: 'Cambiar Contraseña',
                     onTap: () {},
+                  ),
+                  SettingsTile(
+                    icon: Icons.account_balance_outlined,
+                    title: 'Mis Cuentas',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AccountListScreen(),
+                        ),
+                      );
+                    },
                   ),
                   // Note: Evaluar si incorporar en un futuro
                   // SettingsTile(

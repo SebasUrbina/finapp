@@ -105,7 +105,7 @@ class LocalDataService {
   ];
 
   // Accounts
-  static const accounts = [
+  static List<Account> accounts = [
     Account(
       id: 'a_rut',
       name: 'Cuenta RUT',

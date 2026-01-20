@@ -66,6 +66,25 @@ class FinanceRepositoryLocal implements FinanceRepository {
           // In a real app we might throw or nullify, here we just remove.
         });
   }
+
+  @override
+  Future<void> addAccount(Account acc) async {
+    LocalDataService.accounts.add(acc);
+  }
+
+  @override
+  Future<void> updateAccount(Account acc) async {
+    final index = LocalDataService.accounts.indexWhere((a) => a.id == acc.id);
+    if (index != -1) {
+      LocalDataService.accounts[index] = acc;
+    }
+  }
+
+  @override
+  Future<void> deleteAccount(String accountId) async {
+    LocalDataService.accounts.removeWhere((a) => a.id == accountId);
+    // Optionally: remove transactions associated? Usually we shouldn't unless requested.
+  }
 }
 
 // Mockup para transacciones

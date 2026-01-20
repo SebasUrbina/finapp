@@ -41,7 +41,7 @@ class Category {
   });
 
   IconData get iconData => CategoryIconMapper.toIcon(icon);
-  
+
   Color getColor(BuildContext context) =>
       CategoryIconMapper.toColor(icon, context);
 }
@@ -248,6 +248,26 @@ class Account {
     this.color,
     this.creditInfo,
   });
+
+  Account copyWith({
+    String? id,
+    String? name,
+    AccountType? type,
+    IconData? icon,
+    Color? color,
+    Money? balance,
+    CreditCardInfo? creditInfo,
+  }) {
+    return Account(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      icon: icon ?? this.icon,
+      color: color ?? this.color,
+      balance: balance ?? this.balance,
+      creditInfo: creditInfo ?? this.creditInfo,
+    );
+  }
 }
 
 // Recurrencia

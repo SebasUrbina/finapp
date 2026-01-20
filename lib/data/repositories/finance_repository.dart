@@ -20,6 +20,10 @@ abstract class FinanceRepository {
   Future<void> addCategory(Category cat);
   Future<void> updateCategory(Category cat);
   Future<void> deleteCategory(String categoryId);
+  // Crud account
+  Future<void> addAccount(Account acc);
+  Future<void> updateAccount(Account acc);
+  Future<void> deleteAccount(String accountId);
 }
 
 // Transactions repository

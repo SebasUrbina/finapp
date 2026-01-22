@@ -134,6 +134,75 @@ class DashboardController extends StateNotifier<DashboardState> {
     return Money(totalIncome.value - totalExpenses.value);
   }
 
+  /// Get the date range for the previous period
+  DateTimeRange get previousPeriodRange {
+    final date = state.selectedDate;
+
+    switch (state.period) {
+      case PeriodFilter.year:
+        final prevYear = DateTime(date.year - 1, 1, 1);
+        final lastDay = DateTime(date.year - 1, 12, 31, 23, 59, 59);
+        return DateTimeRange(start: prevYear, end: lastDay);
+
+      case PeriodFilter.week:
+        final currentWeekday = date.weekday;
+        final currentMonday = date.subtract(Duration(days: currentWeekday - 1));
+        final prevMonday = currentMonday.subtract(const Duration(days: 7));
+        final prevSunday = prevMonday.add(const Duration(days: 6));
+        return DateTimeRange(
+          start: DateTime(prevMonday.year, prevMonday.month, prevMonday.day),
+          end: DateTime(
+            prevSunday.year,
+            prevSunday.month,
+            prevSunday.day,
+            23,
+            59,
+            59,
+          ),
+        );
+
+      case PeriodFilter.month:
+        final prevMonth = DateTime(date.year, date.month - 1, 1);
+        final lastDay = DateTime(date.year, date.month, 0, 23, 59, 59);
+        return DateTimeRange(start: prevMonth, end: lastDay);
+    }
+  }
+
+  /// Get transactions for the previous period
+  List<Transaction> get _previousPeriodTransactions {
+    final range = previousPeriodRange;
+    return state.transactions.where((t) {
+      return t.date.isAfter(range.start.subtract(const Duration(seconds: 1))) &&
+          t.date.isBefore(range.end.add(const Duration(seconds: 1)));
+    }).toList();
+  }
+
+  /// Total expenses for the previous period
+  Money get previousTotalExpenses {
+    final prevTransactions = _previousPeriodTransactions.where(
+      (t) => t.type == TransactionType.expense,
+    );
+
+    if (prevTransactions.isEmpty) return const Money(0);
+
+    return prevTransactions.map((t) => t.amount).reduce((a, b) => a + b);
+  }
+
+  /// Percentage change in spending compared to previous period
+  double get spendingChangePercentage {
+    if (previousTotalExpenses.value == 0) return 0;
+    return ((totalExpenses.value - previousTotalExpenses.value) /
+            previousTotalExpenses.value) *
+        100;
+  }
+
+  /// Savings rate as percentage (can be negative if spending > income)
+  double get currentSavingsRate {
+    if (totalIncome.value == 0) return 0;
+    final savings = totalIncome.value - totalExpenses.value;
+    return (savings / totalIncome.value * 100);
+  }
+
   /// Transaction count for the period
   int get transactionCount {
     return filteredTransactions.length;
@@ -179,6 +248,80 @@ class DashboardController extends StateNotifier<DashboardState> {
       ..sort((a, b) => b.value.value.compareTo(a.value.value));
 
     return Map.fromEntries(sortedEntries);
+  }
+
+  /// Get top expense category filtered by tag
+  /// If tagId is null, returns overall top category
+  MapEntry<Category, Money>? getTopCategoryByTag(String? tagId) {
+    var transactions = filteredTransactions.where(
+      (t) => t.type == TransactionType.expense && t.categoryId != null,
+    );
+
+    // Filter by tag if specified
+    if (tagId != null) {
+      transactions = transactions.where((t) {
+        final category = getCategoryById(t.categoryId);
+        return category?.tagIds.contains(tagId) ?? false;
+      });
+    }
+
+    if (transactions.isEmpty) return null;
+
+    final Map<Category, Money> categoryTotals = {};
+
+    for (final transaction in transactions) {
+      final category = state.categories.firstWhere(
+        (c) => c.id == transaction.categoryId,
+        orElse: () => const Category(
+          id: 'unknown',
+          name: 'Sin categoría',
+          icon: CategoryIcon.home,
+        ),
+      );
+
+      if (categoryTotals.containsKey(category)) {
+        categoryTotals[category] =
+            categoryTotals[category]! + transaction.amount;
+      } else {
+        categoryTotals[category] = transaction.amount;
+      }
+    }
+
+    if (categoryTotals.isEmpty) return null;
+
+    // Return category with highest spending
+    final sortedEntries = categoryTotals.entries.toList()
+      ..sort((a, b) => b.value.value.compareTo(a.value.value));
+
+    return sortedEntries.first;
+  }
+
+  /// Get daily spending trend for the last 30 days
+  List<DailySpendingData> getDailySpendingTrend({int days = 30}) {
+    final now = DateTime.now();
+    final List<DailySpendingData> trend = [];
+
+    for (int i = days; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final dayStart = DateTime(date.year, date.month, date.day);
+      final dayEnd = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+      final dayTransactions = filteredTransactions.where((t) {
+        return t.type == TransactionType.expense &&
+            t.date.isAfter(dayStart.subtract(const Duration(seconds: 1))) &&
+            t.date.isBefore(dayEnd.add(const Duration(seconds: 1)));
+      });
+
+      final dayExpenses = dayTransactions.isEmpty
+          ? const Money(0)
+          : dayTransactions.map((t) => t.amount).reduce((a, b) => a + b);
+
+      trend.add(
+        DailySpendingData(date: dayStart, amount: dayExpenses, isToday: i == 0),
+      );
+    }
+
+    return trend;
   }
 
   /// Recent transactions (last 7)
@@ -305,6 +448,78 @@ class DashboardController extends StateNotifier<DashboardState> {
 
     return trend;
   }
+
+  /// Get quick insights for the dashboard (max 2)
+  List<DashboardInsight> get quickInsights {
+    final List<DashboardInsight> insights = [];
+
+    // Insight 1: Spending change
+    if (spendingChangePercentage.abs() > 5) {
+      if (spendingChangePercentage > 0) {
+        insights.add(
+          DashboardInsight(
+            type: DashboardInsightType.warning,
+            message:
+                'Tus gastos subieron ${spendingChangePercentage.abs().toStringAsFixed(0)}% respecto al período anterior.',
+            icon: Icons.trending_up_rounded,
+          ),
+        );
+      } else {
+        insights.add(
+          DashboardInsight(
+            type: DashboardInsightType.success,
+            message:
+                '¡Bien! Redujiste tus gastos un ${spendingChangePercentage.abs().toStringAsFixed(0)}% vs el período anterior.',
+            icon: Icons.trending_down_rounded,
+          ),
+        );
+      }
+    }
+
+    // Insight 2: Top category
+    if (expensesByCategory.isNotEmpty) {
+      final topCategory = expensesByCategory.entries.first;
+      final topPercentage = totalExpenses.value > 0
+          ? (topCategory.value.value / totalExpenses.value * 100)
+          : 0.0;
+
+      if (topPercentage > 30) {
+        insights.add(
+          DashboardInsight(
+            type: DashboardInsightType.info,
+            message:
+                '${topCategory.key.name} representa el ${topPercentage.toStringAsFixed(0)}% de tus gastos.',
+            icon: topCategory.key.iconData,
+          ),
+        );
+      }
+    }
+
+    // Insight 3: Savings rate
+    if (insights.length < 2 && currentSavingsRate != 0) {
+      if (currentSavingsRate > 15) {
+        insights.add(
+          DashboardInsight(
+            type: DashboardInsightType.success,
+            message:
+                'Estás ahorrando el ${currentSavingsRate.toStringAsFixed(0)}% de tus ingresos. ¡Excelente!',
+            icon: Icons.savings_rounded,
+          ),
+        );
+      } else if (currentSavingsRate < 0) {
+        insights.add(
+          DashboardInsight(
+            type: DashboardInsightType.warning,
+            message:
+                'Estás gastando más de lo que ingresas. Revisa tu presupuesto.',
+            icon: Icons.warning_rounded,
+          ),
+        );
+      }
+    }
+
+    return insights.take(2).toList();
+  }
 }
 
 /// Data class for spending trend
@@ -317,6 +532,35 @@ class SpendingTrendData {
     required this.label,
     required this.amount,
     required this.isCurrentPeriod,
+  });
+}
+
+/// Insight type for dashboard
+enum DashboardInsightType { success, warning, info }
+
+/// Data class for dashboard insights
+class DashboardInsight {
+  final DashboardInsightType type;
+  final String message;
+  final IconData icon;
+
+  const DashboardInsight({
+    required this.type,
+    required this.message,
+    required this.icon,
+  });
+}
+
+/// Data class for daily spending trend
+class DailySpendingData {
+  final DateTime date;
+  final Money amount;
+  final bool isToday;
+
+  DailySpendingData({
+    required this.date,
+    required this.amount,
+    required this.isToday,
   });
 }
 

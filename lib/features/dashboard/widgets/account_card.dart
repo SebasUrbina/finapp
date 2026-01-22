@@ -10,6 +10,9 @@ class AccountCard extends StatelessWidget {
   final Money expenses;
   final PeriodFilter selectedPeriod;
   final ValueChanged<PeriodFilter> onPeriodChanged;
+  final Money? dailyAverage;
+  final int? transactionCount;
+  final double? changePercentage;
 
   const AccountCard({
     super.key,
@@ -19,16 +22,18 @@ class AccountCard extends StatelessWidget {
     required this.expenses,
     required this.selectedPeriod,
     required this.onPeriodChanged,
+    this.dailyAverage,
+    this.transactionCount,
+    this.changePercentage,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Determine card gradient based on account
     final gradient = _getCardGradient(context);
     final isGeneral = account == null;
 
     return Container(
-      height: 200,
+      height: 220,
       margin: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
         gradient: gradient,
@@ -41,97 +46,121 @@ class AccountCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          // Main content
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row with title and period selector
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Header row with title and period selector
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      isGeneral ? 'Total Balance' : account!.name,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                Expanded(
+                  child: Text(
+                    isGeneral ? 'Balance Total' : account!.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
                     ),
-                    _buildPeriodSelector(context),
-                  ],
-                ),
-                const SizedBox(height: 6),
-
-                // Balance
-                Text(
-                  balance.toCurrency(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.5,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-
-                const SizedBox(height: 16),
-
-                // Income and Expenses row
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatItem('Ingresos', income.toCurrency()),
-                    ),
-                    const SizedBox(width: 24),
-                    Expanded(
-                      child: _buildStatItem('Gastos', expenses.toCurrency()),
-                    ),
-                  ],
-                ),
-
-                if (!isGeneral) ...[
-                  // Account icon/logo
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Icon(
-                          account!.icon ?? Icons.account_balance_wallet,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                _buildPeriodSelector(context),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+
+            // Balance
+            Text(
+              balance.toCurrency(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // Income and Expenses row
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatItem(
+                    'Ingresos',
+                    income.toCurrency(),
+                    Icons.arrow_downward_rounded,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildStatItem(
+                    'Gastos',
+                    expenses.toCurrency(),
+                    Icons.arrow_upward_rounded,
+                  ),
+                ),
+              ],
+            ),
+
+            const Spacer(),
+
+            // Additional metrics pills
+            if (dailyAverage != null ||
+                transactionCount != null ||
+                (changePercentage != null && changePercentage!.abs() > 0.5))
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  if (dailyAverage != null)
+                    _buildMetricPill(
+                      Icons.calendar_today,
+                      '${dailyAverage!.toCurrency()}/día',
+                    ),
+                  if (transactionCount != null)
+                    _buildMetricPill(
+                      Icons.receipt_long_outlined,
+                      '$transactionCount trans.',
+                    ),
+                  if (changePercentage != null && changePercentage!.abs() > 0.5)
+                    _buildMetricPill(
+                      changePercentage! > 0
+                          ? Icons.trending_up_rounded
+                          : Icons.trending_down_rounded,
+                      '${changePercentage! > 0 ? '+' : ''}${changePercentage!.toStringAsFixed(0)}%',
+                      changePercentage! > 0
+                          ? const Color(0xFFFFB74D)
+                          : const Color(0xFF81C784),
+                    ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildStatItem(String label, String value) {
+  Widget _buildStatItem(String label, String value, IconData icon) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white60,
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-          ),
+        Row(
+          children: [
+            Icon(icon, size: 12, color: Colors.white70),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 2),
         Text(
@@ -141,8 +170,34 @@ class AccountCard extends StatelessWidget {
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
+          overflow: TextOverflow.ellipsis,
         ),
       ],
+    );
+  }
+
+  Widget _buildMetricPill(IconData icon, String text, [Color? color]) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: (color ?? Colors.white).withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: Colors.white),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -156,10 +211,10 @@ class AccountCard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildPeriodButton('Y', PeriodFilter.year),
-          const SizedBox(width: 4),
-          _buildPeriodButton('W', PeriodFilter.week),
-          const SizedBox(width: 4),
+          _buildPeriodButton('A', PeriodFilter.year),
+          const SizedBox(width: 3),
+          _buildPeriodButton('S', PeriodFilter.week),
+          const SizedBox(width: 3),
           _buildPeriodButton('M', PeriodFilter.month),
         ],
       ),
@@ -193,22 +248,26 @@ class AccountCard extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     if (account == null) {
-      // General card - purple/blue gradient
+      // General card - vibrant purple/blue gradient
       return const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Color(0xFF5B4FE5), Color(0xFF3D3A7C)],
+        colors: [Color(0xFF667eea), Color(0xFF764ba2)],
       );
     }
 
     // Account-specific gradient based on account color
     final accountColor = account!.color ?? colors.primary;
+    final hslColor = HSLColor.fromColor(accountColor);
+
     return LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [
         accountColor,
-        HSLColor.fromColor(accountColor).withLightness(0.3).toColor(),
+        hslColor
+            .withLightness((hslColor.lightness * 0.7).clamp(0.2, 0.5))
+            .toColor(),
       ],
     );
   }

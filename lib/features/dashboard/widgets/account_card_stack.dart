@@ -63,7 +63,7 @@ class _AccountCardStackState extends State<AccountCardStack>
         }
       },
       child: SizedBox(
-        height: 240,
+        height: 220,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -125,6 +125,9 @@ class _AccountCardStackState extends State<AccountCardStack>
         expenses: widget.controller.totalExpenses,
         selectedPeriod: widget.selectedPeriod,
         onPeriodChanged: widget.onPeriodChanged,
+        dailyAverage: widget.controller.averageDailySpending,
+        transactionCount: widget.controller.transactionCount,
+        changePercentage: widget.controller.spendingChangePercentage,
       );
     } else {
       // Account-specific card
@@ -136,6 +139,9 @@ class _AccountCardStackState extends State<AccountCardStack>
         expenses: widget.controller.totalExpenses,
         selectedPeriod: widget.selectedPeriod,
         onPeriodChanged: widget.onPeriodChanged,
+        dailyAverage: widget.controller.averageDailySpending,
+        transactionCount: widget.controller.transactionCount,
+        changePercentage: widget.controller.spendingChangePercentage,
       );
     }
   }

@@ -66,7 +66,7 @@ class AccountCardItem extends StatelessWidget {
                     Text(
                       account.name,
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w500,
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -84,7 +84,7 @@ class AccountCardItem extends StatelessWidget {
                         _getAccountTypeName(account.type),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: colors.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -92,36 +92,15 @@ class AccountCardItem extends StatelessWidget {
                 ),
               ),
 
-              // Balance & Actions
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    account.balance.toCurrency(),
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      // Improved: removed bold (w900) as requested
-                      fontWeight: FontWeight.w500,
-                      color: account.balance.value < 0
-                          ? colors.error
-                          : colors.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      AccountActionButton(
-                        icon: Icons.edit_outlined,
-                        onTap: onEdit,
-                      ),
-                      const SizedBox(width: 8),
-                      AccountActionButton(
-                        icon: Icons.delete_outline,
-                        onTap: onDelete,
-                        isDestructive: true,
-                      ),
-                    ],
-                  ),
-                ],
+              // Balance
+              Text(
+                account.balance.toCurrency(),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: account.balance.value < 0
+                      ? colors.error
+                      : colors.onSurface,
+                ),
               ),
             ],
           ),
@@ -147,36 +126,5 @@ class AccountCardItem extends StatelessWidget {
       case AccountType.investment:
         return 'Inversión';
     }
-  }
-}
-
-class AccountActionButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final bool isDestructive;
-
-  const AccountActionButton({
-    super.key,
-    required this.icon,
-    required this.onTap,
-    this.isDestructive = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final color = isDestructive ? colors.error : colors.onSurfaceVariant;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, size: 18, color: color),
-      ),
-    );
   }
 }

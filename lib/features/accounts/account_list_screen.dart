@@ -2,9 +2,9 @@ import 'package:finapp/data/providers/finance_providers.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'account_form_screen.dart';
 import 'account_controller.dart';
 import 'widgets/account_card_item.dart';
+import 'widgets/account_form_sheet.dart';
 
 class AccountListScreen extends ConsumerWidget {
   const AccountListScreen({super.key});
@@ -44,8 +44,8 @@ class AccountListScreen extends ConsumerWidget {
                 final account = accounts[index];
                 return AccountCardItem(
                   account: account,
-                  onEdit: () => _navigateToEdit(context, account),
-                  onDelete: () => _showDeleteDialog(context, ref, account),
+                  onEdit: () => _showAccountForm(context, ref, account),
+                  onDelete: () => {}, // Handled inside the form modal
                 );
               },
             ),
@@ -53,7 +53,7 @@ class AccountListScreen extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navigateToEdit(context),
+        onPressed: () => _showAccountForm(context, ref),
         label: const Text('Añadir Cuenta'),
         icon: const Icon(Icons.add),
         backgroundColor: colors.primary,
@@ -63,41 +63,31 @@ class AccountListScreen extends ConsumerWidget {
     );
   }
 
-  void _navigateToEdit(BuildContext context, [Account? account]) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => AccountFormScreen(account: account),
-      ),
-    );
-  }
-
-  void _showDeleteDialog(BuildContext context, WidgetRef ref, Account account) {
-    showDialog(
+  void _showAccountForm(
+    BuildContext context,
+    WidgetRef ref, [
+    Account? account,
+  ]) {
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar Cuenta'),
-        content: Text(
-          '¿Estás seguro de que deseas eliminar "${account.name}"?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () {
-              ref
-                  .read(accountControllerProvider.notifier)
-                  .deleteAccount(account.id);
-              Navigator.of(context).pop();
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
-            child: const Text('Eliminar'),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AccountFormSheet(
+        account: account,
+        onSave: (updatedAccount) {
+          if (account == null) {
+            ref
+                .read(accountControllerProvider.notifier)
+                .addAccount(updatedAccount);
+          } else {
+            ref
+                .read(accountControllerProvider.notifier)
+                .updateAccount(updatedAccount);
+          }
+        },
+        onDelete: (accountId) {
+          ref.read(accountControllerProvider.notifier).deleteAccount(accountId);
+        },
       ),
     );
   }

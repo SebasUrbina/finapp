@@ -1,157 +1,141 @@
 import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
-import 'package:finapp/features/budget/budget_controller.dart';
 
-/// Card de resumen general de presupuesto
+/// Minimal budget summary card
 class BudgetSummaryCard extends StatelessWidget {
-  final BudgetController controller;
+  final double spent;
+  final double limit;
 
-  const BudgetSummaryCard({super.key, required this.controller});
+  const BudgetSummaryCard({
+    super.key,
+    required this.spent,
+    required this.limit,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-
-    final totalBudgeted = controller.totalBudgeted;
-    final totalSpent = controller.totalSpent;
-    final profit = controller.overallProfit;
-    final percentage = controller.overallPercentage;
-    final isProfit = profit.value >= 0;
+    final progress = limit > 0 ? (spent / limit).clamp(0.0, 1.0) : 0.0;
+    final isOverBudget = spent > limit;
+    final remaining = limit - spent;
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colors.primaryContainer,
-            colors.primaryContainer.withValues(alpha: 0.7),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
+        color: theme.cardTheme.color,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(
+              alpha: theme.brightness == Brightness.dark ? 0.15 : 0.04,
+            ),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Resumen del Período',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: colors.onPrimaryContainer,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(
-                child: _buildSummaryItem(
-                  context,
-                  'Presupuestado',
-                  totalBudgeted.toCurrency(),
-                  colors.onPrimaryContainer.withValues(alpha: 0.7),
+              // Icon
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: (isOverBudget ? colors.error : colors.primary)
+                      .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.account_balance_wallet_outlined,
+                  color: isOverBudget ? colors.error : colors.primary,
+                  size: 22,
                 ),
               ),
               const SizedBox(width: 16),
+              // Content
               Expanded(
-                child: _buildSummaryItem(
-                  context,
-                  'Gastado',
-                  totalSpent.toCurrency(),
-                  colors.onPrimaryContainer.withValues(alpha: 0.7),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Presupuesto del mes',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    RichText(
+                      text: TextSpan(
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: spent.toCurrency(),
+                            style: TextStyle(
+                              color: isOverBudget
+                                  ? colors.error
+                                  : colors.onSurface,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ' / ${limit.toCurrency()}',
+                            style: TextStyle(
+                              color: colors.onSurfaceVariant,
+                              fontWeight: FontWeight.normal,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Remaining badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: (isOverBudget ? colors.error : const Color(0xFF4CAF50))
+                      .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  isOverBudget
+                      ? '-${(-remaining).toCurrency()}'
+                      : remaining.toCurrency(),
+                  style: TextStyle(
+                    color: isOverBudget
+                        ? colors.error
+                        : const Color(0xFF4CAF50),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  isProfit ? Icons.trending_up : Icons.trending_down,
-                  color: isProfit ? colors.tertiary : colors.error,
-                  size: 32,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isProfit ? 'Ahorro' : 'Sobregasto',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
-                      Text(
-                        CurrencyFormatter.formatDouble(profit.value.abs()),
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          color: isProfit ? colors.tertiary : colors.error,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: (isProfit ? colors.tertiary : colors.error)
-                        .withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '${percentage.toStringAsFixed(0)}%',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: isProfit ? colors.tertiary : colors.error,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+          const SizedBox(height: 14),
+          // Progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: colors.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isOverBudget ? colors.error : colors.primary,
+              ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSummaryItem(
-    BuildContext context,
-    String label,
-    String value,
-    Color color,
-  ) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: theme.textTheme.bodySmall?.copyWith(color: color)),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: theme.textTheme.titleLarge?.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
     );
   }
 }

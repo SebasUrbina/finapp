@@ -284,34 +284,6 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-              // Category Expenses Section
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverToBoxAdapter(
-                  child: SectionHeader(
-                    title: 'Gastos por categoría',
-                    actionLabel: 'Ver todo',
-                    onActionTap: () {},
-                  ),
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
-
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverToBoxAdapter(
-                  child: CategoryExpenseList(
-                    expenses: controller.expensesByCategory,
-                    totalExpenses: controller.totalExpenses,
-                    limit: 4,
-                  ),
-                ),
-              ),
-
               // Bottom padding for FAB
               const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],

@@ -173,40 +173,8 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                           ),
                           Container(
-                            decoration: BoxDecoration(
-                              color: theme.cardTheme.color,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: ThemeToggleButton(),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Title and Date
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Hola, ',
-                                style: theme.textTheme.headlineMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
+                              horizontal: 22,
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
@@ -232,8 +200,23 @@ class DashboardScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: theme.cardTheme.color,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: ThemeToggleButton(),
+                          ),
                         ],
                       ),
+                      const SizedBox(height: 16),
                     ],
                   ),
                 ),

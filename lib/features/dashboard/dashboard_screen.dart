@@ -2,7 +2,6 @@ import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/dashboard/dashboard_controller.dart';
 import 'package:finapp/features/dashboard/dashboard_state.dart';
 import 'package:finapp/features/dashboard/widgets/transaction_list_item.dart';
-import 'package:finapp/features/dashboard/widgets/category_expense_list.dart';
 import 'package:finapp/features/dashboard/widgets/category_settings_modal/category_settings_modal.dart';
 import 'package:finapp/features/dashboard/widgets/account_card_stack.dart';
 import 'package:finapp/features/dashboard/widgets/transaction_search_modal.dart';

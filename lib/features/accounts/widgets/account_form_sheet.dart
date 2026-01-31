@@ -221,7 +221,7 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButtonFormField<AccountType>(
-                    value: _selectedType,
+                    initialValue: _selectedType,
                     dropdownColor: colors.surfaceContainerLow,
                     decoration: const InputDecoration(border: InputBorder.none),
                     items: AccountType.values.map((type) {

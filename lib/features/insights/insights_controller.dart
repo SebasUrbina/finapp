@@ -61,16 +61,12 @@ class InsightsController extends StateNotifier<InsightsState> {
     switch (state.period) {
       case InsightsPeriod.week:
         next = current.add(const Duration(days: 7));
-        break;
       case InsightsPeriod.month:
         next = DateTime(current.year, current.month + 1, 1);
-        break;
       case InsightsPeriod.quarter:
         next = DateTime(current.year, current.month + 3, 1);
-        break;
       case InsightsPeriod.year:
         next = DateTime(current.year + 1, 1, 1);
-        break;
     }
 
     // No permitir ir al futuro
@@ -86,16 +82,12 @@ class InsightsController extends StateNotifier<InsightsState> {
     switch (state.period) {
       case InsightsPeriod.week:
         prev = current.subtract(const Duration(days: 7));
-        break;
       case InsightsPeriod.month:
         prev = DateTime(current.year, current.month - 1, 1);
-        break;
       case InsightsPeriod.quarter:
         prev = DateTime(current.year, current.month - 3, 1);
-        break;
       case InsightsPeriod.year:
         prev = DateTime(current.year - 1, 1, 1);
-        break;
     }
 
     state = state.copyWith(selectedDate: prev);
@@ -114,16 +106,12 @@ class InsightsController extends StateNotifier<InsightsState> {
     switch (state.period) {
       case InsightsPeriod.week:
         prevDate = current.subtract(const Duration(days: 7));
-        break;
       case InsightsPeriod.month:
         prevDate = DateTime(current.year, current.month - 1, current.day);
-        break;
       case InsightsPeriod.quarter:
         prevDate = DateTime(current.year, current.month - 3, current.day);
-        break;
       case InsightsPeriod.year:
         prevDate = DateTime(current.year - 1, current.month, current.day);
-        break;
     }
 
     return _getPeriodRange(prevDate, state.period);
@@ -284,7 +272,6 @@ class InsightsController extends StateNotifier<InsightsState> {
             SpendingTrendPoint(label: labels[i], amount: amount, date: day),
           );
         }
-        break;
 
       case InsightsPeriod.month:
         // 4-5 puntos, uno por semana
@@ -317,7 +304,6 @@ class InsightsController extends StateNotifier<InsightsState> {
           weekStart = weekStart.add(const Duration(days: 7));
           weekNum++;
         }
-        break;
 
       case InsightsPeriod.quarter:
         // 3 puntos, uno por mes
@@ -352,7 +338,6 @@ class InsightsController extends StateNotifier<InsightsState> {
             ),
           );
         }
-        break;
 
       case InsightsPeriod.year:
         // 12 puntos, uno por mes
@@ -383,7 +368,6 @@ class InsightsController extends StateNotifier<InsightsState> {
             SpendingTrendPoint(label: months[i], amount: amount, date: month),
           );
         }
-        break;
     }
 
     return points;

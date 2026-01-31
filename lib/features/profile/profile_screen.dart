@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/profile_provider.dart';
 import 'widgets/profile_header.dart';
-import 'widgets/premium_banner.dart';
 import 'widgets/settings_widgets.dart';
 import '../accounts/account_list_screen.dart';
+import '../auth/auth_controller.dart';
+import '../settings/settings_screen.dart';
+import '../about/about_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -31,11 +33,6 @@ class ProfileScreen extends ConsumerWidget {
               SettingsSection(
                 title: 'Cuenta', // Account Settings
                 children: [
-                  SettingsTile(
-                    icon: Icons.person_outline,
-                    title: 'Información de la Cuenta',
-                    onTap: () {},
-                  ),
                   SettingsTile(
                     icon: Icons.key_outlined,
                     title: 'Cambiar Contraseña',
@@ -69,27 +66,61 @@ class ProfileScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
               SettingsSection(
-                title: 'Ajustes', // Settings
+                title: 'Configuración', // Settings
                 children: [
                   SettingsTile(
                     icon: Icons.settings_outlined,
                     title: 'Ajustes',
-                    onTap: () {},
-                  ),
-                  SettingsTile(
-                    icon: Icons.help_outline,
-                    title: 'Ayuda y Soporte',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsScreen(),
+                        ),
+                      );
+                    },
                   ),
                   SettingsTile(
                     icon: Icons.info_outline,
                     title: 'Acerca de',
                     showDivider: false,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AboutScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
               const SizedBox(height: 40),
+
+              // Logout Button
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    ref.read(authControllerProvider.notifier).logout();
+                  },
+                  icon: const Icon(Icons.logout, color: Colors.red),
+                  label: const Text(
+                    'Cerrar Sesión',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.red),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),

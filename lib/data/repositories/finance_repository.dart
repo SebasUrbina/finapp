@@ -12,6 +12,7 @@ abstract class FinanceRepository {
   List<Category> getCategories();
   List<Tag> getTags();
   List<Budget> getBudgets();
+  List<Person> getPersons();
   // Crud transaction
   Future<void> addTransaction(Transaction tx);
   Future<void> updateTransaction(Transaction tx);
@@ -24,6 +25,10 @@ abstract class FinanceRepository {
   Future<void> addAccount(Account acc);
   Future<void> updateAccount(Account acc);
   Future<void> deleteAccount(String accountId);
+  // Crud person
+  Future<void> addPerson(Person person);
+  Future<void> updatePerson(Person person);
+  Future<void> deletePerson(String personId);
 }
 
 // Transactions repository

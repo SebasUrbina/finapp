@@ -24,6 +24,9 @@ class FinanceRepositoryLocal implements FinanceRepository {
   List<Budget> getBudgets() => List.from(LocalDataService.budgets);
 
   @override
+  List<Person> getPersons() => List.from(LocalDataService.persons);
+
+  @override
   Future<void> addTransaction(Transaction tx) async {
     LocalDataService.transactions.add(tx);
   }
@@ -84,6 +87,24 @@ class FinanceRepositoryLocal implements FinanceRepository {
   Future<void> deleteAccount(String accountId) async {
     LocalDataService.accounts.removeWhere((a) => a.id == accountId);
     // Optionally: remove transactions associated? Usually we shouldn't unless requested.
+  }
+
+  @override
+  Future<void> addPerson(Person person) async {
+    LocalDataService.persons.add(person);
+  }
+
+  @override
+  Future<void> updatePerson(Person person) async {
+    final index = LocalDataService.persons.indexWhere((p) => p.id == person.id);
+    if (index != -1) {
+      LocalDataService.persons[index] = person;
+    }
+  }
+
+  @override
+  Future<void> deletePerson(String personId) async {
+    LocalDataService.persons.removeWhere((p) => p.id == personId);
   }
 }
 

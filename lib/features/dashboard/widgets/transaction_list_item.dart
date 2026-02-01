@@ -19,7 +19,8 @@ class TransactionListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     final isExpense = transaction.type == TransactionType.expense;
     final isIncome = transaction.type == TransactionType.income;
@@ -30,7 +31,7 @@ class TransactionListItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: colors.surfaceContainerLowest,
+          color: theme.cardTheme.color,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(

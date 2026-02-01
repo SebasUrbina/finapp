@@ -1,3 +1,4 @@
+import 'package:finapp/core/widgets/app_dialogs.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
@@ -135,7 +136,22 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
                   if (widget.account != null && widget.onDelete != null)
                     IconButton(
                       icon: Icon(Icons.delete_outline, color: colors.error),
-                      onPressed: () => _confirmDelete(),
+                      onPressed: () => showDialog(
+                        context: context,
+                        builder: (context) => AppDeleteDialog(
+                          title: 'Eliminar Cuenta',
+                          content: Text(
+                            '¿Estás seguro de que deseas eliminar la cuenta "${widget.account?.name}"? Esta acción borrará la cuenta y todos sus movimientos asociados. No se puede deshacer.',
+                          ),
+                          onConfirm: () {
+                            widget.onDelete!(widget.account!.id);
+                            if (context.mounted) {
+                              Navigator.pop(context); // Close dialog
+                              Navigator.pop(context); // Close form sheet
+                            }
+                          },
+                        ),
+                      ),
                       style: IconButton.styleFrom(
                         backgroundColor: colors.error.withValues(alpha: 0.1),
                         shape: RoundedRectangleBorder(
@@ -369,37 +385,6 @@ class _AccountFormSheetState extends State<AccountFormSheet> {
         return 'Cuenta de Ahorro';
       case AccountType.investment:
         return 'Inversiones';
-    }
-  }
-
-  Future<void> _confirmDelete() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('¿Eliminar Cuenta?'),
-        content: Text(
-          'Esta acción borrará la cuenta "${widget.account?.name}" y todos sus movimientos asociados. No se puede deshacer.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true && widget.onDelete != null) {
-      widget.onDelete!(widget.account!.id);
-      if (mounted) Navigator.pop(context);
     }
   }
 }

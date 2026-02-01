@@ -1,6 +1,7 @@
 import 'package:finapp/core/constants/category_icons.dart';
 import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:finapp/features/dashboard/dashboard_controller.dart';
+import 'package:finapp/features/dashboard/providers/dashboard_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -32,7 +33,6 @@ class _TopCategoryCardState extends ConsumerState<TopCategoryCard> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final state = ref.watch(dashboardControllerProvider);
-    final controller = ref.watch(dashboardControllerProvider.notifier);
 
     // List of tags including "null" for "Todas"
     final List<String?> tagIds = [null, ...state.tags.map((t) => t.id)];
@@ -71,8 +71,12 @@ class _TopCategoryCardState extends ConsumerState<TopCategoryCard> {
                 final tagName = index == 0
                     ? 'Todas'
                     : state.tags[index - 1].name;
-                final topCategoryEntry = controller.getTopCategoryByTag(tagId);
-                final totalExpenses = controller.totalExpenses.value;
+                final topCategoryEntry = ref.watch(
+                  dashboardTopCategoryByTagProvider(tagId),
+                );
+                final totalExpenses = ref
+                    .watch(dashboardTotalExpensesProvider)
+                    .value;
 
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),

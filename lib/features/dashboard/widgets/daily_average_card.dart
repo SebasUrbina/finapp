@@ -1,5 +1,6 @@
 import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:finapp/features/dashboard/dashboard_controller.dart';
+import 'package:finapp/features/dashboard/providers/dashboard_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,10 +11,8 @@ class DailyAverageCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final controller = ref.watch(dashboardControllerProvider.notifier);
-
-    final averageDaily = controller.averageDailySpending;
-    final trendData = controller.getDailySpendingTrend(days: 30);
+    final averageDaily = ref.watch(dashboardAverageDailySpendingProvider);
+    final trendData = ref.watch(dashboardDailySpendingTrendProvider);
 
     return Container(
       height: 170,

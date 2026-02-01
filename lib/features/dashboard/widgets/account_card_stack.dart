@@ -1,11 +1,12 @@
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/dashboard/dashboard_controller.dart';
 import 'package:finapp/features/dashboard/dashboard_state.dart';
+import 'package:finapp/features/dashboard/providers/dashboard_providers.dart';
 import 'package:finapp/features/dashboard/widgets/account_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AccountCardStack extends StatefulWidget {
-  final DashboardController controller;
+class AccountCardStack extends ConsumerStatefulWidget {
   final List<Account> accounts;
   final String? selectedAccountId;
   final PeriodFilter selectedPeriod;
@@ -14,7 +15,6 @@ class AccountCardStack extends StatefulWidget {
 
   const AccountCardStack({
     super.key,
-    required this.controller,
     required this.accounts,
     required this.selectedAccountId,
     required this.selectedPeriod,
@@ -23,10 +23,10 @@ class AccountCardStack extends StatefulWidget {
   });
 
   @override
-  State<AccountCardStack> createState() => _AccountCardStackState();
+  ConsumerState<AccountCardStack> createState() => _AccountCardStackState();
 }
 
-class _AccountCardStackState extends State<AccountCardStack>
+class _AccountCardStackState extends ConsumerState<AccountCardStack>
     with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   double _dragOffset = 0.0;
@@ -120,14 +120,14 @@ class _AccountCardStackState extends State<AccountCardStack>
       // General card
       return AccountCard(
         account: null,
-        balance: widget.controller.balance,
-        income: widget.controller.totalIncome,
-        expenses: widget.controller.totalExpenses,
+        balance: ref.watch(dashboardBalanceProvider),
+        income: ref.watch(dashboardTotalIncomeProvider),
+        expenses: ref.watch(dashboardTotalExpensesProvider),
         selectedPeriod: widget.selectedPeriod,
         onPeriodChanged: widget.onPeriodChanged,
-        dailyAverage: widget.controller.averageDailySpending,
-        transactionCount: widget.controller.transactionCount,
-        changePercentage: widget.controller.spendingChangePercentage,
+        dailyAverage: ref.watch(dashboardAverageDailySpendingProvider),
+        transactionCount: ref.watch(dashboardTransactionCountProvider),
+        changePercentage: ref.watch(dashboardSpendingChangePercentageProvider),
       );
     } else {
       // Account-specific card
@@ -135,13 +135,13 @@ class _AccountCardStackState extends State<AccountCardStack>
       return AccountCard(
         account: account,
         balance: account.balance,
-        income: widget.controller.totalIncome,
-        expenses: widget.controller.totalExpenses,
+        income: ref.watch(dashboardTotalIncomeProvider),
+        expenses: ref.watch(dashboardTotalExpensesProvider),
         selectedPeriod: widget.selectedPeriod,
         onPeriodChanged: widget.onPeriodChanged,
-        dailyAverage: widget.controller.averageDailySpending,
-        transactionCount: widget.controller.transactionCount,
-        changePercentage: widget.controller.spendingChangePercentage,
+        dailyAverage: ref.watch(dashboardAverageDailySpendingProvider),
+        transactionCount: ref.watch(dashboardTransactionCountProvider),
+        changePercentage: ref.watch(dashboardSpendingChangePercentageProvider),
       );
     }
   }

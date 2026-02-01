@@ -1,11 +1,19 @@
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/core/constants/category_icons.dart';
-import 'package:flutter/material.dart';
+import 'package:finapp/features/shared_expenses/widgets/category_split_configurator.dart';
+import 'package:flutter/material.dart' hide Split;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CategoryFormSheet extends StatefulWidget {
+class CategoryFormSheet extends ConsumerStatefulWidget {
   final List<Tag> allTags;
   final Category? initialCategory;
-  final Function(String name, CategoryIcon icon, List<String> tagIds) onSave;
+  final Function(
+    String name,
+    CategoryIcon icon,
+    List<String> tagIds,
+    Split? defaultSplit,
+  )
+  onSave;
   final VoidCallback? onDelete;
 
   const CategoryFormSheet({
@@ -17,13 +25,14 @@ class CategoryFormSheet extends StatefulWidget {
   });
 
   @override
-  State<CategoryFormSheet> createState() => _CategoryFormSheetState();
+  ConsumerState<CategoryFormSheet> createState() => _CategoryFormSheetState();
 }
 
-class _CategoryFormSheetState extends State<CategoryFormSheet> {
+class _CategoryFormSheetState extends ConsumerState<CategoryFormSheet> {
   late final TextEditingController _nameController;
   late CategoryIcon _selectedIcon;
   late List<String> _selectedTagIds;
+  Split? _defaultSplit;
 
   final List<CategoryIcon> _availableIcons = CategoryIcon.values;
 
@@ -33,6 +42,7 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
     _nameController = TextEditingController(text: widget.initialCategory?.name);
     _selectedIcon = widget.initialCategory?.icon ?? CategoryIcon.home;
     _selectedTagIds = List.from(widget.initialCategory?.tagIds ?? []);
+    _defaultSplit = widget.initialCategory?.defaultSplit;
   }
 
   @override
@@ -87,99 +97,124 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
             ],
           ),
           const SizedBox(height: 20),
-          TextField(
-            controller: _nameController,
-            decoration: InputDecoration(
-              labelText: 'Nombre',
-              hintText: 'Ej: Mascotas, Gimnasio...',
-              filled: true,
-              fillColor: colors.surfaceContainerHighest.withValues(alpha: 0.3),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text('Icono', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 60,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _availableIcons.length,
-              itemBuilder: (context, index) {
-                final iconEnum = _availableIcons[index];
-                final isSelected = _selectedIcon == iconEnum;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedIcon = iconEnum),
-                  child: Container(
-                    width: 50,
-                    margin: const EdgeInsets.only(right: 12),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? CategoryIconMapper.toColor(
-                              iconEnum,
-                              context,
-                            ).withValues(alpha: 0.2)
-                          : colors.surfaceContainerHighest.withValues(
-                              alpha: 0.3,
-                            ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: isSelected
-                          ? Border.all(
-                              color: CategoryIconMapper.toColor(
-                                iconEnum,
-                                context,
-                              ),
-                              width: 2,
-                            )
-                          : null,
-                    ),
-                    child: Icon(
-                      CategoryIconMapper.toIcon(iconEnum),
-                      color: isSelected
-                          ? CategoryIconMapper.toColor(iconEnum, context)
-                          : colors.onSurfaceVariant,
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Nombre',
+                      hintText: 'Ej: Mascotas, Gimnasio...',
+                      filled: true,
+                      fillColor: colors.surfaceContainerHighest.withValues(
+                        alpha: 0.3,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
-                );
-              },
+                  const SizedBox(height: 24),
+                  Text('Icono', style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 60,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _availableIcons.length,
+                      itemBuilder: (context, index) {
+                        final iconEnum = _availableIcons[index];
+                        final isSelected = _selectedIcon == iconEnum;
+                        return GestureDetector(
+                          onTap: () => setState(() => _selectedIcon = iconEnum),
+                          child: Container(
+                            width: 50,
+                            margin: const EdgeInsets.only(right: 12),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? CategoryIconMapper.toColor(
+                                      iconEnum,
+                                      context,
+                                    ).withValues(alpha: 0.2)
+                                  : colors.surfaceContainerHighest.withValues(
+                                      alpha: 0.3,
+                                    ),
+                              borderRadius: BorderRadius.circular(12),
+                              border: isSelected
+                                  ? Border.all(
+                                      color: CategoryIconMapper.toColor(
+                                        iconEnum,
+                                        context,
+                                      ),
+                                      width: 2,
+                                    )
+                                  : null,
+                            ),
+                            child: Icon(
+                              CategoryIconMapper.toIcon(iconEnum),
+                              color: isSelected
+                                  ? CategoryIconMapper.toColor(
+                                      iconEnum,
+                                      context,
+                                    )
+                                  : colors.onSurfaceVariant,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text('Tags sugeridos', style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: widget.allTags.map((tag) {
+                      final isSelected = _selectedTagIds.contains(tag.id);
+                      return FilterChip(
+                        label: Text(tag.name),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedTagIds.add(tag.id);
+                            } else {
+                              _selectedTagIds.remove(tag.id);
+                            }
+                          });
+                        },
+                        selectedColor: colors.primaryContainer,
+                        checkmarkColor: colors.primary,
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? colors.onPrimaryContainer
+                              : colors.onSurface,
+                          fontSize: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Split Configuration Section
+                  // CategorySplitConfigurator(
+                  //   initialSplit: _defaultSplit,
+                  //   onSplitChanged: (split) {
+                  //     setState(() {
+                  //       _defaultSplit = split;
+                  //     });
+                  //   },
+                  // ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          Text('Tags sugeridos', style: theme.textTheme.titleSmall),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: widget.allTags.map((tag) {
-              final isSelected = _selectedTagIds.contains(tag.id);
-              return FilterChip(
-                label: Text(tag.name),
-                selected: isSelected,
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _selectedTagIds.add(tag.id);
-                    } else {
-                      _selectedTagIds.remove(tag.id);
-                    }
-                  });
-                },
-                selectedColor: colors.primaryContainer,
-                checkmarkColor: colors.primary,
-                labelStyle: TextStyle(
-                  color: isSelected
-                      ? colors.onPrimaryContainer
-                      : colors.onSurface,
-                  fontSize: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              );
-            }).toList(),
           ),
           const SizedBox(height: 32),
           SizedBox(
@@ -191,6 +226,7 @@ class _CategoryFormSheetState extends State<CategoryFormSheet> {
                     _nameController.text,
                     _selectedIcon,
                     _selectedTagIds,
+                    _defaultSplit,
                   );
                 }
               },

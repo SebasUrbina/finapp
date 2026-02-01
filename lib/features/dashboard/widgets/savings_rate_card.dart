@@ -1,4 +1,4 @@
-import 'package:finapp/features/dashboard/dashboard_controller.dart';
+import 'package:finapp/features/dashboard/providers/dashboard_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
@@ -10,9 +10,8 @@ class SavingsRateCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final controller = ref.watch(dashboardControllerProvider.notifier);
 
-    final savingsRate = controller.currentSavingsRate;
+    final savingsRate = ref.watch(dashboardSavingsRateProvider);
     final isPositive = savingsRate >= 0;
 
     return Container(

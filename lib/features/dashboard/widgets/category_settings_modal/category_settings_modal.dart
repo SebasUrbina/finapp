@@ -20,12 +20,13 @@ class CategorySettingsModal extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       builder: (context) => CategoryFormSheet(
         allTags: allTags,
-        onSave: (name, icon, tagIds) {
+        onSave: (name, icon, tagIds, defaultSplit) {
           final newCategory = Category(
             id: 'c_${DateTime.now().millisecondsSinceEpoch}',
             name: name,
             icon: icon,
             tagIds: tagIds,
+            defaultSplit: defaultSplit,
           );
           ref
               .read(dashboardControllerProvider.notifier)
@@ -49,12 +50,13 @@ class CategorySettingsModal extends ConsumerWidget {
       builder: (context) => CategoryFormSheet(
         allTags: allTags,
         initialCategory: category,
-        onSave: (name, icon, tagIds) {
+        onSave: (name, icon, tagIds, defaultSplit) {
           final updatedCategory = Category(
             id: category.id,
             name: name,
             icon: icon,
             tagIds: tagIds,
+            defaultSplit: defaultSplit,
           );
           ref
               .read(dashboardControllerProvider.notifier)

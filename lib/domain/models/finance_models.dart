@@ -33,17 +33,37 @@ class Category {
   /// Referencias a tags
   final List<String> tagIds;
 
+  /// Split por defecto para gastos de esta categoría
+  final Split? defaultSplit;
+
   const Category({
     required this.id,
     required this.name,
     required this.icon,
     this.tagIds = const [],
+    this.defaultSplit,
   });
 
   IconData get iconData => CategoryIconMapper.toIcon(icon);
 
   Color getColor(BuildContext context) =>
       CategoryIconMapper.toColor(icon, context);
+
+  Category copyWith({
+    String? id,
+    String? name,
+    CategoryIcon? icon,
+    List<String>? tagIds,
+    Split? defaultSplit,
+  }) {
+    return Category(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      icon: icon ?? this.icon,
+      tagIds: tagIds ?? this.tagIds,
+      defaultSplit: defaultSplit ?? this.defaultSplit,
+    );
+  }
 }
 
 // Note: No usamos subcategorias porque

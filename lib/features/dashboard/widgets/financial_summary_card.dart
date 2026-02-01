@@ -1,30 +1,30 @@
 import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:finapp/features/dashboard/dashboard_controller.dart';
 import 'package:finapp/features/dashboard/dashboard_state.dart';
+import 'package:finapp/features/dashboard/providers/dashboard_providers.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class FinancialSummaryCard extends StatelessWidget {
-  final DashboardController controller;
+class FinancialSummaryCard extends ConsumerWidget {
   final PeriodFilter selectedPeriod;
   final ValueChanged<PeriodFilter> onPeriodChanged;
 
   const FinancialSummaryCard({
     super.key,
-    required this.controller,
     required this.selectedPeriod,
     required this.onPeriodChanged,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    final income = controller.totalIncome;
-    final expenses = controller.totalExpenses;
-    final savings = controller.balance;
-    final savingsRate = controller.savingsRate;
+    final income = ref.watch(dashboardTotalIncomeProvider);
+    final expenses = ref.watch(dashboardTotalExpensesProvider);
+    final savings = ref.watch(dashboardBalanceProvider);
+    final savingsRate = ref.watch(dashboardSavingsRateProvider);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -124,7 +124,7 @@ class FinancialSummaryCard extends StatelessWidget {
               const SizedBox(width: 16),
 
               // Right side: Spending trend chart
-              Expanded(flex: 2, child: _buildSpendingTrendChart(context)),
+              Expanded(flex: 2, child: _buildSpendingTrendChart(context, ref)),
             ],
           ),
         ],
@@ -181,9 +181,9 @@ class FinancialSummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildSpendingTrendChart(BuildContext context) {
+  Widget _buildSpendingTrendChart(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
-    final trendData = controller.spendingTrend;
+    final trendData = ref.watch(dashboardSpendingTrendProvider);
 
     if (trendData.isEmpty) {
       return Center(

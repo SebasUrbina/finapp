@@ -1,6 +1,7 @@
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/dashboard/dashboard_controller.dart';
 import 'package:finapp/features/dashboard/dashboard_state.dart';
+import 'package:finapp/features/dashboard/providers/dashboard_providers.dart';
 import 'package:finapp/features/dashboard/widgets/transaction_list_item.dart';
 import 'package:finapp/features/dashboard/widgets/category_settings_modal/category_settings_modal.dart';
 import 'package:finapp/features/dashboard/widgets/account_card_stack.dart';
@@ -224,7 +225,6 @@ class DashboardScreen extends ConsumerWidget {
               // Account Card Stack
               SliverToBoxAdapter(
                 child: AccountCardStack(
-                  controller: controller,
                   accounts: state.accounts,
                   selectedAccountId: state.selectedAccountId,
                   selectedPeriod: state.period,
@@ -261,7 +261,9 @@ class DashboardScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: SliverToBoxAdapter(
                   child: RecentTransactionsList(
-                    transactions: controller.filteredTransactions,
+                    transactions: ref.watch(
+                      dashboardFilteredTransactionsProvider,
+                    ),
                     onTransactionTap: (tx) => _showTransactionEdit(context, tx),
                   ),
                 ),

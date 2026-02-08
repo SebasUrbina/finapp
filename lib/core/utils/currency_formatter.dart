@@ -1,6 +1,7 @@
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:intl/intl.dart';
 
+/// Formatter for currency values
 class CurrencyFormatter {
   static final _currencyFormat = NumberFormat.currency(
     symbol: r'$',
@@ -31,10 +32,12 @@ class CurrencyFormatter {
   }
 }
 
+
 extension MoneyCurrencyExtension on Money {
   String toCurrency() => CurrencyFormatter.formatMoney(this);
 }
 
+/// Extension for double to currency formatting
 extension DoubleCurrencyExtension on double {
   String toCurrency() => CurrencyFormatter.formatDouble(this);
   String toFormatted() => CurrencyFormatter.formatDoubleNoSymbol(this);

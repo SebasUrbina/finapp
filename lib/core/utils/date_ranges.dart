@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:finapp/features/dashboard/dashboard_state.dart';
+import 'package:finapp/domain/models/dashboard_models.dart';
 
+/// Builds the current date range based on the current date and period.
 DateTimeRange buildRange(DateTime date, PeriodFilter period) {
   switch (period) {
     case PeriodFilter.year:
@@ -25,6 +26,7 @@ DateTimeRange buildRange(DateTime date, PeriodFilter period) {
   }
 }
 
+/// Builds the previous date range based on the current date and period.
 DateTimeRange buildPreviousRange(DateTime date, PeriodFilter period) {
   switch (period) {
     case PeriodFilter.year:
@@ -49,6 +51,7 @@ DateTimeRange buildPreviousRange(DateTime date, PeriodFilter period) {
   }
 }
 
+/// Checks if a date is within a given date range.
 bool isWithin(DateTime date, DateTimeRange range) {
   return !date.isBefore(range.start) && !date.isAfter(range.end);
 }

@@ -13,7 +13,7 @@ class AppTheme {
       surface: const Color(0xFFF8FAFC),
       surfaceContainerHighest: const Color(0xFFF1F5F9),
     ),
-    textTheme: GoogleFonts.interTextTheme(_lightTextTheme),
+    textTheme: GoogleFonts.outfitTextTheme(_lightTextTheme),
     appBarTheme: const AppBarTheme(
       elevation: 0,
       centerTitle: false,
@@ -73,6 +73,17 @@ class AppTheme {
     ),
     bodyLarge: TextStyle(color: Color(0xFF0F172A), fontSize: 16),
     bodyMedium: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+    bodySmall: TextStyle(color: Color(0xFF64748B), fontSize: 12),
+    labelSmall: TextStyle(
+      color: Color(0xFF64748B),
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+    ),
+    titleSmall: TextStyle(
+      color: Color(0xFF0F172A),
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+    ),
   );
 
   static final TextTheme _darkTextTheme = const TextTheme(
@@ -98,6 +109,17 @@ class AppTheme {
     ),
     bodyLarge: TextStyle(color: Color(0xFFF1F5F9), fontSize: 16),
     bodyMedium: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+    bodySmall: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+    labelSmall: TextStyle(
+      color: Color(0xFF94A3B8),
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+    ),
+    titleSmall: TextStyle(
+      color: Colors.white,
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+    ),
   );
 }
 

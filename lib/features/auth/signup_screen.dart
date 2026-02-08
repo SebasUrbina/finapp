@@ -63,7 +63,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AuthConstants.primaryPurple.withOpacity(0.1),
+                        color: AuthConstants.primaryPurple.withValues(
+                          alpha: 0.1,
+                        ),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -216,7 +218,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               // Loading overlay
               if (authState.isLoading)
                 Container(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   child: const Center(
                     child: CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(
@@ -262,7 +264,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         boxShadow: enabled
             ? [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
+                  color: Colors.black.withValues(alpha: 0.02),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),

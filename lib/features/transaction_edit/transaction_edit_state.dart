@@ -1,7 +1,7 @@
 import 'package:finapp/domain/models/finance_models.dart';
 
 class TransactionEditState {
-  final String transactionId;
+  final Transaction originalTransaction;
   final TransactionType type;
   final double amount;
   final String description;
@@ -14,24 +14,26 @@ class TransactionEditState {
   final int dayOfMonth;
 
   TransactionEditState({
-    required this.transactionId,
-    this.type = TransactionType.expense,
-    this.amount = 0,
-    this.description = '',
+    required this.originalTransaction,
+    required this.type,
+    required this.amount,
+    required this.description,
     this.selectedAccount,
     this.selectedCategory,
-    DateTime? selectedDate,
+    required this.selectedDate,
     this.isRecurring = false,
     this.frequency = RecurrenceFrequency.monthly,
     this.interval = 1,
     this.dayOfMonth = 1,
-  }) : selectedDate = selectedDate ?? DateTime.now();
+  });
+
+  String get transactionId => originalTransaction.id;
 
   bool get canSubmit =>
       amount > 0 && selectedAccount != null && selectedCategory != null;
 
   TransactionEditState copyWith({
-    String? transactionId,
+    Transaction? originalTransaction,
     TransactionType? type,
     double? amount,
     String? description,
@@ -44,7 +46,7 @@ class TransactionEditState {
     int? dayOfMonth,
   }) {
     return TransactionEditState(
-      transactionId: transactionId ?? this.transactionId,
+      originalTransaction: originalTransaction ?? this.originalTransaction,
       type: type ?? this.type,
       amount: amount ?? this.amount,
       description: description ?? this.description,

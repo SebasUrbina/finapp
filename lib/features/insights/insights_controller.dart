@@ -2,63 +2,57 @@ import 'package:finapp/data/providers/finance_providers.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/insights/insights_state.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-final insightsControllerProvider =
-    StateNotifierProvider<InsightsController, InsightsState>((ref) {
-      final transactions = ref.watch(transactionsProvider);
-      final categories = ref.watch(categoriesProvider);
-      final accounts = ref.watch(accountsProvider);
-      final tags = ref.watch(tagsProvider);
+part 'insights_controller.g.dart';
 
-      return InsightsController(
-        transactions: transactions,
-        categories: categories,
-        accounts: accounts,
-        tags: tags,
-      );
-    });
+@riverpod
+class InsightsController extends _$InsightsController {
+  @override
+  FutureOr<InsightsState> build() async {
+    final transactions = await ref.watch(transactionsProvider.future);
+    final categories = await ref.watch(categoriesProvider.future);
+    final accounts = await ref.watch(accountsProvider.future);
+    final tags = await ref.watch(tagsProvider.future);
 
-class InsightsController extends StateNotifier<InsightsState> {
-  InsightsController({
-    required List<Transaction> transactions,
-    required List<Category> categories,
-    required List<Account> accounts,
-    required List<Tag> tags,
-  }) : super(
-         InsightsState(
-           period: InsightsPeriod.month,
-           selectedDate: DateTime.now(),
-           transactions: transactions,
-           categories: categories,
-           accounts: accounts,
-           tags: tags,
-         ),
-       );
+    return InsightsState(
+      period: InsightsPeriod.month,
+      selectedDate: DateTime.now(),
+      transactions: transactions,
+      categories: categories,
+      accounts: accounts,
+      tags: tags,
+    );
+  }
 
   // ========== State Management ==========
 
   void setPeriod(InsightsPeriod period) {
-    state = state.copyWith(period: period);
+    if (!state.hasValue) return;
+    state = AsyncData(state.value!.copyWith(period: period));
   }
 
   void setDate(DateTime date) {
-    state = state.copyWith(selectedDate: date);
+    if (!state.hasValue) return;
+    state = AsyncData(state.value!.copyWith(selectedDate: date));
   }
 
   void setTag(String? tagId) {
+    if (!state.hasValue) return;
     if (tagId == null) {
-      state = state.copyWith(clearTagId: true);
+      state = AsyncData(state.value!.copyWith(clearTagId: true));
     } else {
-      state = state.copyWith(selectedTagId: tagId);
+      state = AsyncData(state.value!.copyWith(selectedTagId: tagId));
     }
   }
 
   void nextPeriod() {
-    final current = state.selectedDate;
+    if (!state.hasValue) return;
+    final currentState = state.value!;
+    final current = currentState.selectedDate;
     DateTime next;
 
-    switch (state.period) {
+    switch (currentState.period) {
       case InsightsPeriod.week:
         next = current.add(const Duration(days: 7));
       case InsightsPeriod.month:
@@ -71,15 +65,17 @@ class InsightsController extends StateNotifier<InsightsState> {
 
     // No permitir ir al futuro
     if (next.isBefore(DateTime.now().add(const Duration(days: 1)))) {
-      state = state.copyWith(selectedDate: next);
+      setDate(next);
     }
   }
 
   void previousPeriod() {
-    final current = state.selectedDate;
+    if (!state.hasValue) return;
+    final currentState = state.value!;
+    final current = currentState.selectedDate;
     DateTime prev;
 
-    switch (state.period) {
+    switch (currentState.period) {
       case InsightsPeriod.week:
         prev = current.subtract(const Duration(days: 7));
       case InsightsPeriod.month:
@@ -90,20 +86,25 @@ class InsightsController extends StateNotifier<InsightsState> {
         prev = DateTime(current.year - 1, 1, 1);
     }
 
-    state = state.copyWith(selectedDate: prev);
+    setDate(prev);
   }
 
   // ========== Period Range Calculation ==========
 
   DateTimeRange get currentPeriodRange {
-    return _getPeriodRange(state.selectedDate, state.period);
+    if (!state.hasValue)
+      return DateTimeRange(start: DateTime.now(), end: DateTime.now());
+    return _getPeriodRange(state.value!.selectedDate, state.value!.period);
   }
 
   DateTimeRange get previousPeriodRange {
-    final current = state.selectedDate;
+    if (!state.hasValue)
+      return DateTimeRange(start: DateTime.now(), end: DateTime.now());
+    final current = state.value!.selectedDate;
+    final period = state.value!.period;
     DateTime prevDate;
 
-    switch (state.period) {
+    switch (period) {
       case InsightsPeriod.week:
         prevDate = current.subtract(const Duration(days: 7));
       case InsightsPeriod.month:
@@ -114,7 +115,7 @@ class InsightsController extends StateNotifier<InsightsState> {
         prevDate = DateTime(current.year - 1, current.month, current.day);
     }
 
-    return _getPeriodRange(prevDate, state.period);
+    return _getPeriodRange(prevDate, period);
   }
 
   DateTimeRange _getPeriodRange(DateTime date, InsightsPeriod period) {
@@ -147,6 +148,7 @@ class InsightsController extends StateNotifier<InsightsState> {
   }
 
   String get periodLabel {
+    if (!state.hasValue) return '';
     final range = currentPeriodRange;
     final months = [
       'Ene',
@@ -163,7 +165,7 @@ class InsightsController extends StateNotifier<InsightsState> {
       'Dic',
     ];
 
-    switch (state.period) {
+    switch (state.value!.period) {
       case InsightsPeriod.week:
         final start = range.start;
         final end = range.end;
@@ -195,7 +197,8 @@ class InsightsController extends StateNotifier<InsightsState> {
   }
 
   List<Transaction> _getTransactionsInRange(DateTimeRange range) {
-    return state.transactions.where((t) {
+    if (!state.hasValue) return [];
+    return state.value!.transactions.where((t) {
       return t.date.isAfter(range.start.subtract(const Duration(seconds: 1))) &&
           t.date.isBefore(range.end.add(const Duration(seconds: 1)));
     }).toList();
@@ -216,13 +219,15 @@ class InsightsController extends StateNotifier<InsightsState> {
   // ========== Spending Overview ==========
 
   double get totalSpending {
-    if (_currentExpenses.isEmpty) return 0;
-    return _currentExpenses.fold(0.0, (sum, t) => sum + t.amount.value);
+    final expenses = _currentExpenses;
+    if (expenses.isEmpty) return 0;
+    return expenses.fold(0.0, (sum, t) => sum + t.amount.value);
   }
 
   double get previousTotalSpending {
-    if (_previousExpenses.isEmpty) return 0;
-    return _previousExpenses.fold(0.0, (sum, t) => sum + t.amount.value);
+    final expenses = _previousExpenses;
+    if (expenses.isEmpty) return 0;
+    return expenses.fold(0.0, (sum, t) => sum + t.amount.value);
   }
 
   double get spendingChangePercentage {
@@ -249,12 +254,12 @@ class InsightsController extends StateNotifier<InsightsState> {
   // ========== Spending Trend ==========
 
   List<SpendingTrendPoint> get spendingTrend {
+    if (!state.hasValue) return [];
     final List<SpendingTrendPoint> points = [];
     final range = currentPeriodRange;
 
-    switch (state.period) {
+    switch (state.value!.period) {
       case InsightsPeriod.week:
-        // 7 puntos, uno por día
         for (int i = 0; i < 7; i++) {
           final day = range.start.add(Duration(days: i));
           final dayExpenses = _currentExpenses.where(
@@ -274,7 +279,6 @@ class InsightsController extends StateNotifier<InsightsState> {
         }
 
       case InsightsPeriod.month:
-        // 4-5 puntos, uno por semana
         DateTime weekStart = range.start;
         int weekNum = 1;
         while (weekStart.isBefore(range.end)) {
@@ -306,7 +310,6 @@ class InsightsController extends StateNotifier<InsightsState> {
         }
 
       case InsightsPeriod.quarter:
-        // 3 puntos, uno por mes
         for (int i = 0; i < 3; i++) {
           final month = DateTime(range.start.year, range.start.month + i, 1);
           final monthExpenses = _currentExpenses.where(
@@ -340,7 +343,6 @@ class InsightsController extends StateNotifier<InsightsState> {
         }
 
       case InsightsPeriod.year:
-        // 12 puntos, uno por mes
         for (int i = 0; i < 12; i++) {
           final month = DateTime(range.start.year, i + 1, 1);
           final monthExpenses = _currentExpenses.where(
@@ -387,10 +389,10 @@ class InsightsController extends StateNotifier<InsightsState> {
   // ========== Category Breakdown ==========
 
   List<CategorySpendingData> get categoryBreakdown {
+    if (!state.hasValue) return [];
     final Map<String, double> currentByCategory = {};
     final Map<String, double> previousByCategory = {};
 
-    // Calcular gastos actuales por categoría
     for (final t in _currentExpenses) {
       if (t.categoryId != null) {
         currentByCategory[t.categoryId!] =
@@ -398,7 +400,6 @@ class InsightsController extends StateNotifier<InsightsState> {
       }
     }
 
-    // Calcular gastos anteriores por categoría
     for (final t in _previousExpenses) {
       if (t.categoryId != null) {
         previousByCategory[t.categoryId!] =
@@ -410,7 +411,7 @@ class InsightsController extends StateNotifier<InsightsState> {
     final List<CategorySpendingData> result = [];
 
     for (final entry in currentByCategory.entries) {
-      final category = state.categories.firstWhere(
+      final category = state.value!.categories.firstWhere(
         (c) => c.id == entry.key,
         orElse: () => const Category(
           id: 'unknown',
@@ -434,7 +435,6 @@ class InsightsController extends StateNotifier<InsightsState> {
       );
     }
 
-    // Ordenar por monto descendente
     result.sort((a, b) => b.amount.compareTo(a.amount));
     return result;
   }
@@ -443,15 +443,12 @@ class InsightsController extends StateNotifier<InsightsState> {
     return categoryBreakdown.take(5).toList();
   }
 
-  /// Top expenses filtered by selected tag
   List<CategorySpendingData> get filteredTopExpenses {
-    if (state.selectedTagId == null) {
-      return topExpenses;
-    }
+    if (!state.hasValue) return [];
+    if (state.value!.selectedTagId == null) return topExpenses;
 
-    // Filter categories that have the selected tag
-    final filteredCategories = state.categories
-        .where((c) => c.tagIds.contains(state.selectedTagId))
+    final filteredCategories = state.value!.categories
+        .where((c) => c.tagIds.contains(state.value!.selectedTagId))
         .map((c) => c.id)
         .toSet();
 
@@ -474,7 +471,6 @@ class InsightsController extends StateNotifier<InsightsState> {
       7: [],
     };
 
-    // Agrupar gastos por día de la semana
     for (final t in _currentExpenses) {
       amountsByDay[t.date.weekday]!.add(t.amount.value);
     }
@@ -483,7 +479,6 @@ class InsightsController extends StateNotifier<InsightsState> {
     final List<WeekdaySpendingData> result = [];
     double maxAverage = 0;
 
-    // Calcular promedios
     for (int day = 1; day <= 7; day++) {
       final amounts = amountsByDay[day]!;
       final avg = amounts.isEmpty
@@ -495,12 +490,11 @@ class InsightsController extends StateNotifier<InsightsState> {
           weekday: day,
           label: labels[day - 1],
           averageAmount: avg,
-          intensity: 0, // Se calculará después
+          intensity: 0,
         ),
       );
     }
 
-    // Calcular intensidades normalizadas
     return result.map((data) {
       return WeekdaySpendingData(
         weekday: data.weekday,
@@ -534,7 +528,7 @@ class InsightsController extends StateNotifier<InsightsState> {
     final range = currentPeriodRange;
     final daysInPeriod = range.end.difference(range.start).inDays + 1;
     final dailySavings = netSavings / daysInPeriod;
-    return dailySavings * 30; // Proyección mensual
+    return dailySavings * 30;
   }
 
   // ========== Smart Tips ==========
@@ -542,7 +536,6 @@ class InsightsController extends StateNotifier<InsightsState> {
   List<SmartTip> get smartTips {
     final List<SmartTip> tips = [];
 
-    // Tip 1: Cambio en gasto total
     if (spendingChangePercentage.abs() > 10) {
       if (spendingChangePercentage > 0) {
         tips.add(
@@ -567,7 +560,6 @@ class InsightsController extends StateNotifier<InsightsState> {
       }
     }
 
-    // Tip 2: Categoría con mayor incremento
     final risingCategories = categoryBreakdown
         .where((c) => c.changeFromPrevious > 20)
         .toList();
@@ -584,7 +576,6 @@ class InsightsController extends StateNotifier<InsightsState> {
       );
     }
 
-    // Tip 3: Día de mayor gasto
     final dayLabels = [
       'Lunes',
       'Martes',
@@ -595,20 +586,23 @@ class InsightsController extends StateNotifier<InsightsState> {
       'Domingo',
     ];
     final highDay = highestSpendingDay;
-    final highDayData = weekdayPatterns.firstWhere((d) => d.weekday == highDay);
-    if (highDayData.averageAmount > 0) {
-      tips.add(
-        SmartTip(
-          type: SmartTipType.suggestion,
-          title: 'Patrón detectado',
-          description:
-              'Los ${dayLabels[highDay - 1]} sueles gastar más. ¡Planifica con anticipación!',
-          iconType: IconType.calendar,
-        ),
+    if (weekdayPatterns.isNotEmpty) {
+      final highDayData = weekdayPatterns.firstWhere(
+        (d) => d.weekday == highDay,
       );
+      if (highDayData.averageAmount > 0) {
+        tips.add(
+          SmartTip(
+            type: SmartTipType.suggestion,
+            title: 'Patrón detectado',
+            description:
+                'Los ${dayLabels[highDay - 1]} sueles gastar más. ¡Planifica con anticipación!',
+            iconType: IconType.calendar,
+          ),
+        );
+      }
     }
 
-    // Tip 4: Tasa de ahorro
     if (savingsRate > 20) {
       tips.add(
         SmartTip(

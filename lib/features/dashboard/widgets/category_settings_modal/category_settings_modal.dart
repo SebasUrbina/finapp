@@ -1,3 +1,4 @@
+import 'package:finapp/data/providers/finance_providers.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/dashboard/dashboard_controller.dart';
 import 'package:finapp/features/dashboard/widgets/category_settings_modal/add_category_box.dart';
@@ -28,9 +29,7 @@ class CategorySettingsModal extends ConsumerWidget {
             tagIds: tagIds,
             defaultSplit: defaultSplit,
           );
-          ref
-              .read(dashboardControllerProvider.notifier)
-              .addCategory(newCategory);
+          ref.read(categoriesProvider.notifier).addCategory(newCategory);
           Navigator.pop(context);
         },
       ),
@@ -58,15 +57,11 @@ class CategorySettingsModal extends ConsumerWidget {
             tagIds: tagIds,
             defaultSplit: defaultSplit,
           );
-          ref
-              .read(dashboardControllerProvider.notifier)
-              .updateCategory(updatedCategory);
+          ref.read(categoriesProvider.notifier).updateCategory(updatedCategory);
           Navigator.pop(context);
         },
         onDelete: () {
-          ref
-              .read(dashboardControllerProvider.notifier)
-              .deleteCategory(category.id);
+          ref.read(categoriesProvider.notifier).deleteCategory(category.id);
           Navigator.pop(context); // Close sheet
         },
       ),
@@ -80,7 +75,17 @@ class CategorySettingsModal extends ConsumerWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     // Watch the state directly to rebuild when categories/tags change
-    final state = ref.watch(dashboardControllerProvider);
+    final asyncState = ref.watch(dashboardStateProvider);
+    // Handle loading/error states gracefully or show loading
+    final state = asyncState.valueOrNull;
+
+    if (state == null) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final categories = state.categories;
     final allTags = state.tags;
 

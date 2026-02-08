@@ -12,7 +12,7 @@ class AccountController extends StateNotifier<AsyncValue<void>> {
     try {
       final repo = _ref.read(financeRepositoryProvider);
       await repo.addAccount(account);
-      _ref.invalidate(accountsProvider); // Sync with other views
+      await _ref.read(accountsProvider.notifier).reload(); // Silent reload
       state = const AsyncValue.data(null);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
@@ -24,7 +24,7 @@ class AccountController extends StateNotifier<AsyncValue<void>> {
     try {
       final repo = _ref.read(financeRepositoryProvider);
       await repo.updateAccount(account);
-      _ref.invalidate(accountsProvider); // Sync with other views
+      await _ref.read(accountsProvider.notifier).reload();
       state = const AsyncValue.data(null);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
@@ -36,7 +36,12 @@ class AccountController extends StateNotifier<AsyncValue<void>> {
     try {
       final repo = _ref.read(financeRepositoryProvider);
       await repo.deleteAccount(accountId);
-      _ref.invalidate(accountsProvider); // Sync with other views
+      await _ref.read(accountsProvider.notifier).reload();
+      // Also reload transactions as they might be affected or need cleanup?
+      // Assuming cascade delete or similar is handled by repo/logic.
+      // Reloading transactions just in case:
+      await _ref.read(transactionsProvider.notifier).reload();
+
       state = const AsyncValue.data(null);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);

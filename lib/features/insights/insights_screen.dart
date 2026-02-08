@@ -20,8 +20,8 @@ class InsightsScreen extends ConsumerWidget {
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    final state = ref.watch(insightsControllerProvider);
-    final controller = ref.watch(insightsControllerProvider.notifier);
+    final asyncState = ref.watch(insightsControllerProvider);
+    final controller = ref.read(insightsControllerProvider.notifier);
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -39,204 +39,210 @@ class InsightsScreen extends ConsumerWidget {
           ),
         ),
         child: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              // Header
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-                sliver: SliverToBoxAdapter(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Insights',
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
+          child: asyncState.when(
+            skipLoadingOnReload: true, // Prevents flicker
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => Center(child: Text('Error: $err')),
+            data: (state) => CustomScrollView(
+              slivers: [
+                // Header
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                  sliver: SliverToBoxAdapter(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Insights',
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Analiza tus finanzas',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: theme.cardTheme.color,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Analiza tus finanzas',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colors.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         ),
-                        child: IconButton(
-                          icon: const Icon(Icons.tune_rounded),
-                          onPressed: () {
-                            // TODO: Open filter options
-                          },
+                        Container(
+                          decoration: BoxDecoration(
+                            color: theme.cardTheme.color,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.tune_rounded),
+                            onPressed: () {
+                              // TODO: Open filter options
+                            },
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              // Time Selector
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverToBoxAdapter(
-                  child: InsightsTimeSelector(
-                    selectedPeriod: state.period,
-                    periodLabel: controller.periodLabel,
-                    onPeriodChanged: controller.setPeriod,
-                    onPreviousTap: controller.previousPeriod,
-                    onNextTap: controller.nextPeriod,
-                  ),
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-              // Spending Overview Card
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverToBoxAdapter(
-                  child: SpendingOverviewCard(
-                    totalSpending: controller.totalSpending,
-                    previousSpending: controller.previousTotalSpending,
-                    changePercentage: controller.spendingChangePercentage,
-                    averageDaily: controller.averageDailySpending,
-                  ),
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-              // Smart Tips
-              if (controller.smartTips.isNotEmpty)
+                // Time Selector
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverToBoxAdapter(
-                    child: SmartTipsCard(tips: controller.smartTips),
+                    child: InsightsTimeSelector(
+                      selectedPeriod: state.period,
+                      periodLabel: controller.periodLabel,
+                      onPeriodChanged: controller.setPeriod,
+                      onPreviousTap: controller.previousPeriod,
+                      onNextTap: controller.nextPeriod,
+                    ),
                   ),
                 ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
-              // Spending Trend Chart
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverToBoxAdapter(
-                  child: SpendingTrendChart(
-                    data: controller.spendingTrend,
-                    maxAmount: controller.trendMaxAmount,
-                    averageAmount: controller.trendAverageAmount,
+                // Spending Overview Card
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverToBoxAdapter(
+                    child: SpendingOverviewCard(
+                      totalSpending: controller.totalSpending,
+                      previousSpending: controller.previousTotalSpending,
+                      changePercentage: controller.spendingChangePercentage,
+                      averageDaily: controller.averageDailySpending,
+                    ),
                   ),
                 ),
-              ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-              // Category Breakdown
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverToBoxAdapter(
-                  child: CategoryBreakdownCard(
-                    categories: controller.categoryBreakdown,
-                    totalSpending: controller.totalSpending,
+                // Smart Tips
+                if (controller.smartTips.isNotEmpty)
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    sliver: SliverToBoxAdapter(
+                      child: SmartTipsCard(tips: controller.smartTips),
+                    ),
+                  ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // Spending Trend Chart
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverToBoxAdapter(
+                    child: SpendingTrendChart(
+                      data: controller.spendingTrend,
+                      maxAmount: controller.trendMaxAmount,
+                      averageAmount: controller.trendAverageAmount,
+                    ),
                   ),
                 ),
-              ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-              // Top Expenses Section with Tag Filter
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverToBoxAdapter(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Top Categorías',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
+                // Category Breakdown
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverToBoxAdapter(
+                    child: CategoryBreakdownCard(
+                      categories: controller.categoryBreakdown,
+                      totalSpending: controller.totalSpending,
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // Top Expenses Section with Tag Filter
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverToBoxAdapter(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Top Categorías',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      Icon(
-                        Icons.filter_list_rounded,
-                        size: 20,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ],
+                        Icon(
+                          Icons.filter_list_rounded,
+                          size: 20,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-              // Tag Filter Bar
-              SliverToBoxAdapter(
-                child: TagFilterBar(
-                  tags: state.tags,
-                  selectedTagId: state.selectedTagId,
-                  onTagSelected: controller.setTag,
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
-
-              // Top Expenses Card (filtered)
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverToBoxAdapter(
-                  child: TopExpensesCard(
-                    topCategories: controller.filteredTopExpenses,
+                // Tag Filter Bar
+                SliverToBoxAdapter(
+                  child: TagFilterBar(
+                    tags: state.tags,
+                    selectedTagId: state.selectedTagId,
+                    onTagSelected: controller.setTag,
                   ),
                 ),
-              ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
-              // Weekly Patterns
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverToBoxAdapter(
-                  child: SpendingPatternsCard(
-                    weekdayData: controller.weekdayPatterns,
-                    highestDay: controller.highestSpendingDay,
+                // Top Expenses Card (filtered)
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverToBoxAdapter(
+                    child: TopExpensesCard(
+                      topCategories: controller.filteredTopExpenses,
+                    ),
                   ),
                 ),
-              ),
 
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-              // Savings Insights
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverToBoxAdapter(
-                  child: SavingsInsightsCard(
-                    savingsRate: controller.savingsRate,
-                    totalIncome: controller.totalIncome,
-                    totalSpending: controller.totalSpending,
-                    netSavings: controller.netSavings,
-                    projectedMonthlySavings: controller.projectedMonthlySavings,
+                // Weekly Patterns
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverToBoxAdapter(
+                    child: SpendingPatternsCard(
+                      weekdayData: controller.weekdayPatterns,
+                      highestDay: controller.highestSpendingDay,
+                    ),
                   ),
                 ),
-              ),
 
-              // Bottom padding
-              const SliverToBoxAdapter(child: SizedBox(height: 32)),
-            ],
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                // Savings Insights
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverToBoxAdapter(
+                    child: SavingsInsightsCard(
+                      savingsRate: controller.savingsRate,
+                      totalIncome: controller.totalIncome,
+                      totalSpending: controller.totalSpending,
+                      netSavings: controller.netSavings,
+                      projectedMonthlySavings:
+                          controller.projectedMonthlySavings,
+                    ),
+                  ),
+                ),
+
+                // Bottom padding
+                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+              ],
+            ),
           ),
         ),
       ),

@@ -1,17 +1,17 @@
 import 'package:finapp/data/providers/finance_providers.dart';
 import 'package:finapp/domain/models/finance_models.dart';
+import 'package:finapp/features/accounts/widgets/account_card_item.dart';
+import 'package:finapp/features/accounts/widgets/account_form_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'account_controller.dart';
-import 'widgets/account_card_item.dart';
-import 'widgets/account_form_sheet.dart';
+import 'package:finapp/features/accounts/account_controller.dart';
 
 class AccountListScreen extends ConsumerWidget {
   const AccountListScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final accounts = ref.watch(accountsProvider);
+    final accountsAsync = ref.watch(accountsProvider);
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -37,17 +37,26 @@ class AccountListScreen extends ConsumerWidget {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              itemCount: accounts.length,
-              itemBuilder: (context, index) {
-                final account = accounts[index];
-                return AccountCardItem(
-                  account: account,
-                  onEdit: () => _showAccountForm(context, ref, account),
-                  onDelete: () => {}, // Handled inside the form modal
-                );
-              },
+            child: accountsAsync.when(
+              skipLoadingOnReload:
+                  true, // Prevents flicker during silent refresh
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Center(child: Text('Error: $err')),
+              data: (accounts) => ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
+                itemCount: accounts.length,
+                itemBuilder: (context, index) {
+                  final account = accounts[index];
+                  return AccountCardItem(
+                    account: account,
+                    onEdit: () => _showAccountForm(context, ref, account),
+                    onDelete: () => {}, // Handled inside the form modal
+                  );
+                },
+              ),
             ),
           ),
         ],

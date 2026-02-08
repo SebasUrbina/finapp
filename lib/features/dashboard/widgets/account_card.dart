@@ -1,5 +1,5 @@
+import 'package:finapp/domain/models/dashboard_models.dart';
 import 'package:finapp/domain/models/finance_models.dart';
-import 'package:finapp/features/dashboard/dashboard_state.dart';
 import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
 

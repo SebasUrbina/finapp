@@ -7,10 +7,7 @@ import 'package:finapp/domain/models/finance_models.dart';
 
 class LocalDataService {
   // Persons
-  static const persons = [
-    Person(id: 'p1', name: 'Sebastián'),
-    Person(id: 'p2', name: 'Maria Paz'),
-  ];
+  static List<Person> persons = [const Person(id: 'p1', name: 'Maria Paz')];
 
   // Tags
   static List<Tag> tags = [
@@ -59,12 +56,26 @@ class LocalDataService {
       name: 'Arriendo',
       icon: CategoryIcon.home,
       tagIds: ['tg_needs', 'tg_shared', 'tg_fixed'],
+      defaultSplit: Split(
+        type: SplitType.equal,
+        participants: [
+          SplitParticipant(personId: 'p1', value: 0.5),
+          SplitParticipant(personId: 'p2', value: 0.5),
+        ],
+      ),
     ),
     const Category(
       id: 'c_supermarket',
       name: 'Supermercado',
       icon: CategoryIcon.shoppingCart,
       tagIds: ['tg_needs', 'tg_food', 'tg_variable'],
+      defaultSplit: Split(
+        type: SplitType.equal,
+        participants: [
+          SplitParticipant(personId: 'p1', value: 0.5),
+          SplitParticipant(personId: 'p2', value: 0.5),
+        ],
+      ),
     ),
     const Category(
       id: 'c_common_expenses',
@@ -220,28 +231,28 @@ class LocalDataService {
       id: 't_income_1',
       amount: Money(1800000),
       type: TransactionType.income,
-      date: DateTime(2026, 1, 1),
+      date: DateTime(2026, 2, 1),
       accountId: 'a_banco',
-      description: 'Sueldo Enero',
+      description: 'Sueldo Febrero',
     ),
     Transaction(
       id: 't_income_2',
       amount: Money(500000),
       type: TransactionType.income,
-      date: DateTime(2026, 1, 5),
+      date: DateTime(2026, 2, 5),
       accountId: 'a_rut',
       description: 'Freelance',
     ),
 
-    // Expenses - January
+    // Expenses - February
     Transaction(
       id: 't1',
       amount: Money(450000),
       type: TransactionType.expense,
-      date: DateTime(2026, 1, 2),
+      date: DateTime(2026, 2, 2),
       accountId: 'a_rut',
       categoryId: 'c_rent',
-      description: 'Arriendo enero',
+      description: 'Arriendo',
       split: Split(
         type: SplitType.equal,
         participants: [
@@ -254,7 +265,7 @@ class LocalDataService {
       id: 't2',
       amount: Money(120000),
       type: TransactionType.expense,
-      date: DateTime(2026, 1, 3),
+      date: DateTime(2026, 2, 3),
       accountId: 'a_credit',
       categoryId: 'c_supermarket',
       description: 'Líder',
@@ -263,7 +274,7 @@ class LocalDataService {
       id: 't3',
       amount: Money(18000),
       type: TransactionType.expense,
-      date: DateTime(2026, 1, 4),
+      date: DateTime(2026, 2, 4),
       accountId: 'a_cash',
       categoryId: 'c_transport',
       description: 'Bip!',
@@ -272,7 +283,7 @@ class LocalDataService {
       id: 't4',
       amount: Money(35000),
       type: TransactionType.expense,
-      date: DateTime(2026, 1, 5),
+      date: DateTime(2026, 2, 5),
       accountId: 'a_credit',
       categoryId: 'c_eating_out',
       description: 'Cena viernes',
@@ -288,7 +299,7 @@ class LocalDataService {
       id: 't5',
       amount: Money(85000),
       type: TransactionType.expense,
-      date: DateTime(2026, 1, 6),
+      date: DateTime(2026, 2, 6),
       accountId: 'a_bci',
       categoryId: 'c_utilities',
       description: 'Luz y agua',
@@ -297,7 +308,7 @@ class LocalDataService {
       id: 't6',
       amount: Money(65000),
       type: TransactionType.expense,
-      date: DateTime(2026, 1, 7),
+      date: DateTime(2026, 2, 7),
       accountId: 'a_rut',
       categoryId: 'c_supermarket',
       description: 'Jumbo',
@@ -306,7 +317,7 @@ class LocalDataService {
       id: 't7',
       amount: Money(25000),
       type: TransactionType.expense,
-      date: DateTime(2026, 1, 8),
+      date: DateTime(2026, 2, 8),
       accountId: 'a_cash',
       categoryId: 'c_eating_out',
       description: 'Almuerzo',
@@ -315,7 +326,7 @@ class LocalDataService {
       id: 't8',
       amount: Money(15000),
       type: TransactionType.expense,
-      date: DateTime(2026, 1, 9),
+      date: DateTime(2026, 2, 9),
       accountId: 'a_credit',
       categoryId: 'c_entertainment',
       description: 'Cine',
@@ -324,7 +335,7 @@ class LocalDataService {
       id: 't9',
       amount: Money(4500),
       type: TransactionType.expense,
-      date: DateTime(2026, 1, 10),
+      date: DateTime(2026, 2, 10),
       accountId: 'a_rut',
       categoryId: 'c_transport',
       description: 'Uber',
@@ -333,7 +344,7 @@ class LocalDataService {
       id: 't10',
       amount: Money(80000),
       type: TransactionType.expense,
-      date: DateTime(2026, 1, 10),
+      date: DateTime(2026, 2, 10),
       accountId: 'a_bci',
       categoryId: 'c_supermarket',
       description: 'Santa Isabel',

@@ -72,7 +72,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           decoration: BoxDecoration(
                             color: _currentPage == index
                                 ? AuthConstants.primaryPurple
-                                : AuthConstants.primaryPurple.withOpacity(0.2),
+                                : AuthConstants.primaryPurple.withValues(
+                                    alpha: 0.2,
+                                  ),
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),

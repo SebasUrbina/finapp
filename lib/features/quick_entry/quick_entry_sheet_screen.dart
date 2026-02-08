@@ -17,7 +17,7 @@ class QuickEntrySheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Providers
-    final state = ref.watch(quickEntryControllerProvider);
+    final asyncState = ref.watch(quickEntryControllerProvider);
     final notifier = ref.read(quickEntryControllerProvider.notifier);
 
     return AnimatedPadding(
@@ -26,78 +26,87 @@ class QuickEntrySheet extends ConsumerWidget {
       ),
       duration: const Duration(milliseconds: 200),
       child: _SheetContainer(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: AmountInput(
-                      value: state.amount,
-                      onChanged: notifier.setAmount,
+        child: asyncState.when(
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(),
+            ),
+          ),
+          error: (err, stack) => Center(child: Text('Error: $err')),
+          data: (state) => SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: AmountInput(
+                        value: state.amount,
+                        onChanged: notifier.setAmount,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  TransactionTypeSwitcher(
-                    selected: state.type,
-                    onChanged: notifier.setType,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              DateSelector(
-                selectedDate: state.selectedDate,
-                onChanged: notifier.setDate,
-              ),
-              const SizedBox(height: 16),
-              DescriptionInput(onChanged: notifier.setDescription),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: AccountCategoryRow(
-                      selectedAccount: state.selectedAccount,
-                      selectedCategory: state.selectedCategory,
-                      onAccountTap: () => _showAccountPicker(context, ref),
-                      onCategoryTap: () => _showCategoryPicker(context, ref),
+                    const SizedBox(width: 12),
+                    TransactionTypeSwitcher(
+                      selected: state.type,
+                      onChanged: notifier.setType,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 1,
-                    child: RecurringToggle(
-                      value: state.isRecurring,
-                      onChanged: notifier.toggleRecurring,
-                    ),
-                  ),
-                ],
-              ),
-              if (state.isRecurring) ...[
+                  ],
+                ),
+                const SizedBox(height: 4),
+                DateSelector(
+                  selectedDate: state.selectedDate,
+                  onChanged: notifier.setDate,
+                ),
+                const SizedBox(height: 16),
+                DescriptionInput(onChanged: notifier.setDescription),
                 const SizedBox(height: 12),
-                RecurrenceOptions(
-                  frequency: state.frequency,
-                  interval: state.interval,
-                  dayOfMonth: state.dayOfMonth,
-                  onChanged: notifier.setRecurrence,
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: AccountCategoryRow(
+                        selectedAccount: state.selectedAccount,
+                        selectedCategory: state.selectedCategory,
+                        onAccountTap: () => _showAccountPicker(context, ref),
+                        onCategoryTap: () => _showCategoryPicker(context, ref),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 1,
+                      child: RecurringToggle(
+                        value: state.isRecurring,
+                        onChanged: notifier.toggleRecurring,
+                      ),
+                    ),
+                  ],
+                ),
+                if (state.isRecurring) ...[
+                  const SizedBox(height: 12),
+                  RecurrenceOptions(
+                    frequency: state.frequency,
+                    interval: state.interval,
+                    dayOfMonth: state.dayOfMonth,
+                    onChanged: notifier.setRecurrence,
+                  ),
+                ],
+                const SizedBox(height: 24),
+                SaveButton(
+                  label: state.isRecurring
+                      ? 'Guardar Recurrente'
+                      : 'Guardar Transacción',
+                  onPressed: state.canSubmit
+                      ? () async {
+                          await notifier.submit();
+                          if (context.mounted) Navigator.pop(context);
+                        }
+                      : null,
                 ),
               ],
-              const SizedBox(height: 24),
-              SaveButton(
-                label: state.isRecurring
-                    ? 'Guardar Recurrente'
-                    : 'Guardar Transacción',
-                onPressed: state.canSubmit
-                    ? () async {
-                        await notifier.submit();
-                        if (context.mounted) Navigator.pop(context);
-                      }
-                    : null,
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -114,7 +123,7 @@ class QuickEntrySheet extends ConsumerWidget {
       builder: (context) => Consumer(
         builder: (context, ref, _) {
           final colors = Theme.of(context).colorScheme;
-          final accounts = ref.watch(accountsProvider);
+          final accountsAsync = ref.watch(accountsProvider);
 
           return Container(
             padding: const EdgeInsets.all(24),
@@ -132,32 +141,37 @@ class QuickEntrySheet extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: accounts.length,
-                    itemBuilder: (context, index) {
-                      final account = accounts[index];
-                      return ListTile(
-                        leading: Icon(
-                          account.icon ?? Icons.account_balance_wallet,
-                          color: account.color ?? colors.primary,
-                        ),
-                        title: Text(
-                          account.name,
-                          style: TextStyle(color: colors.onSurface),
-                        ),
-                        subtitle: Text(
-                          r'$' + account.balance.value.toStringAsFixed(0),
-                          style: TextStyle(color: colors.onSurface),
-                        ),
-                        onTap: () {
-                          ref
-                              .read(quickEntryControllerProvider.notifier)
-                              .setAccount(account);
-                          Navigator.pop(context);
-                        },
-                      );
-                    },
+                  child: accountsAsync.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (err, stack) => Text('Error loading accounts: $err'),
+                    data: (accounts) => ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: accounts.length,
+                      itemBuilder: (context, index) {
+                        final account = accounts[index];
+                        return ListTile(
+                          leading: Icon(
+                            account.icon ?? Icons.account_balance_wallet,
+                            color: account.color ?? colors.primary,
+                          ),
+                          title: Text(
+                            account.name,
+                            style: TextStyle(color: colors.onSurface),
+                          ),
+                          subtitle: Text(
+                            r'$' + account.balance.value.toStringAsFixed(0),
+                            style: TextStyle(color: colors.onSurface),
+                          ),
+                          onTap: () {
+                            ref
+                                .read(quickEntryControllerProvider.notifier)
+                                .setAccount(account);
+                            Navigator.pop(context);
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -179,7 +193,7 @@ class QuickEntrySheet extends ConsumerWidget {
       builder: (context) => Consumer(
         builder: (context, ref, _) {
           final colors = Theme.of(context).colorScheme;
-          final categories = ref.watch(categoriesProvider);
+          final categoriesAsync = ref.watch(categoriesProvider);
 
           return Container(
             padding: const EdgeInsets.all(24),
@@ -200,46 +214,55 @@ class QuickEntrySheet extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Flexible(
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                        ),
-                    itemCount: categories.length,
-                    itemBuilder: (context, index) {
-                      final cat = categories[index];
-                      return InkWell(
-                        onTap: () {
-                          ref
-                              .read(quickEntryControllerProvider.notifier)
-                              .setCategory(cat);
-                          Navigator.pop(context);
-                        },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: colors.surfaceContainerLow,
-                              child: Icon(cat.iconData, color: colors.primary),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              cat.name,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colors.onSurface,
+                  child: categoriesAsync.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (err, stack) =>
+                        Text('Error loading categories: $err'),
+                    data: (categories) => GridView.builder(
+                      shrinkWrap: true,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                          ),
+                      itemCount: categories.length,
+                      itemBuilder: (context, index) {
+                        final cat = categories[index];
+                        return InkWell(
+                          onTap: () {
+                            ref
+                                .read(quickEntryControllerProvider.notifier)
+                                .setCategory(cat);
+                            Navigator.pop(context);
+                          },
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: colors.surfaceContainerLow,
+                                child: Icon(
+                                  cat.iconData,
+                                  color: colors.primary,
+                                ),
                               ),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                              const SizedBox(height: 4),
+                              Text(
+                                cat.name,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colors.onSurface,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],

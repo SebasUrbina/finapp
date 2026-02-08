@@ -1,7 +1,6 @@
 import 'package:finapp/core/constants/category_icons.dart';
 import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:finapp/features/dashboard/dashboard_controller.dart';
-import 'package:finapp/features/dashboard/providers/dashboard_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -32,10 +31,11 @@ class _TopCategoryCardState extends ConsumerState<TopCategoryCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final state = ref.watch(dashboardControllerProvider);
+    final stateAsync = ref.watch(dashboardStateProvider);
+    final tags = stateAsync.valueOrNull?.tags ?? [];
 
     // List of tags including "null" for "Todas"
-    final List<String?> tagIds = [null, ...state.tags.map((t) => t.id)];
+    final List<String?> tagIds = [null, ...tags.map((t) => t.id)];
     final totalPages = tagIds.length;
 
     return Container(
@@ -68,9 +68,7 @@ class _TopCategoryCardState extends ConsumerState<TopCategoryCard> {
               itemCount: totalPages,
               itemBuilder: (context, index) {
                 final tagId = tagIds[index];
-                final tagName = index == 0
-                    ? 'Todas'
-                    : state.tags[index - 1].name;
+                final tagName = index == 0 ? 'Todas' : tags[index - 1].name;
                 final topCategoryEntry = ref.watch(
                   dashboardTopCategoryByTagProvider(tagId),
                 );

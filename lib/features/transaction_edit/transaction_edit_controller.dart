@@ -1,94 +1,120 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/data/providers/finance_providers.dart';
+import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/transaction_edit/transaction_edit_state.dart';
-import 'package:finapp/features/dashboard/dashboard_controller.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-/// Provider family que recibe la transacción a editar
-final transactionEditControllerProvider = NotifierProvider.autoDispose
-    .family<TransactionEditController, TransactionEditState, Transaction>(
-      TransactionEditController.new,
-    );
+part 'transaction_edit_controller.g.dart';
 
-class TransactionEditController
-    extends AutoDisposeFamilyNotifier<TransactionEditState, Transaction> {
+@riverpod
+class TransactionEditController extends _$TransactionEditController {
   @override
-  TransactionEditState build(Transaction arg) {
-    // Inicializar el estado con los datos de la transacción a editar
-    final accounts = ref.watch(accountsProvider);
-    final categories = ref.watch(categoriesProvider);
+  FutureOr<TransactionEditState> build(Transaction transaction) async {
+    final categories = await ref.watch(categoriesProvider.future);
+    final accounts = await ref.watch(accountsProvider.future);
 
-    // Buscar la cuenta y categoría actuales
-    final currentAccount = accounts.firstWhere(
-      (a) => a.id == arg.accountId,
-      orElse: () => accounts.first,
+    final category = categories.firstWhere(
+      (c) => c.id == transaction.categoryId,
+      orElse: () => Category(
+        id: transaction.categoryId ?? 'unknown',
+        name: 'Unknown',
+        icon: CategoryIcon.home,
+      ),
     );
 
-    final currentCategory = arg.categoryId != null
-        ? categories.firstWhere(
-            (c) => c.id == arg.categoryId,
-            orElse: () => categories.first,
-          )
-        : categories.first;
+    final account = accounts.firstWhere(
+      (a) => a.id == transaction.accountId,
+      orElse: () => Account(
+        id: transaction.accountId,
+        name: 'Unknown',
+        type: AccountType.checking, // Default type
+        balance: Money(0),
+      ),
+    );
 
     return TransactionEditState(
-      transactionId: arg.id,
-      type: arg.type,
-      amount: arg.amount.value, // Usar directamente el valor
-      description: arg.description ?? '',
-      selectedAccount: currentAccount,
-      selectedCategory: currentCategory,
-      selectedDate: arg.date,
-      isRecurring: arg.recurringRuleId != null,
+      originalTransaction: transaction,
+      type: transaction.type,
+      amount: transaction.amount.value,
+      description: transaction.description ?? '',
+      selectedAccount: account,
+      selectedCategory: category,
+      selectedDate: transaction.date,
+      isRecurring: transaction.recurringRuleId != null,
     );
   }
 
-  void setAmount(double v) => state = state.copyWith(amount: v);
-  void setDescription(String v) => state = state.copyWith(description: v);
-  void setType(TransactionType t) => state = state.copyWith(type: t);
-  void setAccount(Account? a) => state = state.copyWith(selectedAccount: a);
-  void setCategory(Category? c) => state = state.copyWith(selectedCategory: c);
-  void setDate(DateTime d) => state = state.copyWith(selectedDate: d);
-  void toggleRecurring(bool v) => state = state.copyWith(isRecurring: v);
+  void setAmount(double v) {
+    if (!state.hasValue) return;
+    state = AsyncData(state.value!.copyWith(amount: v));
+  }
+
+  void setDescription(String v) {
+    if (!state.hasValue) return;
+    state = AsyncData(state.value!.copyWith(description: v));
+  }
+
+  void setType(TransactionType t) {
+    if (!state.hasValue) return;
+    state = AsyncData(state.value!.copyWith(type: t));
+  }
+
+  void setAccount(Account? a) {
+    if (!state.hasValue) return;
+    state = AsyncData(state.value!.copyWith(selectedAccount: a));
+  }
+
+  void setCategory(Category? c) {
+    if (!state.hasValue) return;
+    state = AsyncData(state.value!.copyWith(selectedCategory: c));
+  }
+
+  void setDate(DateTime d) {
+    if (!state.hasValue) return;
+    state = AsyncData(state.value!.copyWith(selectedDate: d));
+  }
+
+  void toggleRecurring(bool v) {
+    if (!state.hasValue) return;
+    state = AsyncData(state.value!.copyWith(isRecurring: v));
+  }
 
   void setRecurrence(RecurrenceFrequency f, int i, int d) {
-    state = state.copyWith(frequency: f, interval: i, dayOfMonth: d);
+    if (!state.hasValue) return;
+    state = AsyncData(
+      state.value!.copyWith(frequency: f, interval: i, dayOfMonth: d),
+    );
   }
 
   Future<void> submit() async {
-    if (!state.canSubmit) return;
+    if (!state.hasValue || !state.value!.canSubmit) return;
+    final currentState = state.value!;
 
-    // Crear la transacción actualizada
-    final updatedTransaction = Transaction(
-      id: state.transactionId,
-      accountId: state.selectedAccount!.id,
-      categoryId: state.selectedCategory!.id,
-      amount: Money(state.amount), // Usar directamente el valor
-      date: state.selectedDate,
-      type: state.type,
-      description: state.description.isEmpty ? null : state.description,
+    final updatedTx = currentState.originalTransaction.copyWith(
+      accountId: currentState.selectedAccount!.id,
+      categoryId: currentState.selectedCategory!.id,
+      amount: Money(currentState.amount),
+      date: currentState.selectedDate,
+      type: currentState.type,
+      description: currentState.description,
     );
 
-    // Actualizar en el repositorio
-    await ref
-        .read(financeRepositoryProvider)
-        .updateTransaction(updatedTransaction);
+    await ref.read(financeRepositoryProvider).updateTransaction(updatedTx);
 
-    // Invalidar providers para refrescar la UI
-    ref.invalidate(transactionsProvider);
-    ref.invalidate(accountsProvider);
-    ref.read(dashboardControllerProvider.notifier).refresh();
+    // Silent reload to update lists without flicker
+    await ref.read(transactionsProvider.notifier).reload();
+    await ref.read(accountsProvider.notifier).reload();
+    await ref.read(budgetsProvider.notifier).reload();
   }
 
   Future<void> delete() async {
-    // Eliminar la transacción del repositorio
-    await ref
-        .read(financeRepositoryProvider)
-        .deleteTransaction(state.transactionId);
+    if (!state.hasValue) return;
+    final txId = state.value!.transactionId;
 
-    // Invalidar providers para refrescar la UI
-    ref.invalidate(transactionsProvider);
-    ref.invalidate(accountsProvider);
-    ref.read(dashboardControllerProvider.notifier).refresh();
+    await ref.read(financeRepositoryProvider).deleteTransaction(txId);
+
+    // Silent reload
+    await ref.read(transactionsProvider.notifier).reload();
+    await ref.read(accountsProvider.notifier).reload();
+    await ref.read(budgetsProvider.notifier).reload();
   }
 }

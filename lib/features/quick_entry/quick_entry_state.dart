@@ -11,6 +11,7 @@ class QuickEntryState {
   final RecurrenceFrequency frequency;
   final int interval;
   final int dayOfMonth;
+  final Split? split;
 
   QuickEntryState({
     this.type = TransactionType.expense,
@@ -23,6 +24,7 @@ class QuickEntryState {
     this.frequency = RecurrenceFrequency.monthly,
     this.interval = 1,
     this.dayOfMonth = 1,
+    this.split,
   }) : selectedDate = selectedDate ?? DateTime.now();
 
   bool get canSubmit =>
@@ -39,6 +41,7 @@ class QuickEntryState {
     RecurrenceFrequency? frequency,
     int? interval,
     int? dayOfMonth,
+    Split? split,
   }) {
     return QuickEntryState(
       type: type ?? this.type,
@@ -51,6 +54,7 @@ class QuickEntryState {
       frequency: frequency ?? this.frequency,
       interval: interval ?? this.interval,
       dayOfMonth: dayOfMonth ?? this.dayOfMonth,
+      split: split ?? this.split,
     );
   }
 }

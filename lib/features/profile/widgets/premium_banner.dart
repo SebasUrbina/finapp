@@ -13,14 +13,17 @@ class PremiumBanner extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [colorScheme.primary.withOpacity(0.7), colorScheme.primary],
+          colors: [
+            colorScheme.primary.withValues(alpha: 0.7),
+            colorScheme.primary,
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withOpacity(0.3),
+            color: colorScheme.primary.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -31,7 +34,7 @@ class PremiumBanner extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: const Icon(

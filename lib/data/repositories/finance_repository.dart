@@ -7,12 +7,12 @@ import 'package:finapp/domain/models/finance_models.dart';
 
 abstract class FinanceRepository {
   // CRUD
-  List<Account> getAccounts();
-  List<Transaction> getTransactions();
-  List<Category> getCategories();
-  List<Tag> getTags();
-  List<Budget> getBudgets();
-  List<Person> getPersons();
+  Future<List<Account>> getAccounts();
+  Future<List<Transaction>> getTransactions();
+  Future<List<Category>> getCategories();
+  Future<List<Tag>> getTags();
+  Future<List<Budget>> getBudgets();
+  Future<List<Person>> getPersons();
   // Crud transaction
   Future<void> addTransaction(Transaction tx);
   Future<void> updateTransaction(Transaction tx);

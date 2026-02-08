@@ -1,6 +1,6 @@
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/core/constants/category_icons.dart';
-import 'package:finapp/features/shared_expenses/widgets/category_split_configurator.dart';
+
 import 'package:flutter/material.dart' hide Split;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

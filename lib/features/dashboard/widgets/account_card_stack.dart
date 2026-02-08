@@ -1,7 +1,6 @@
+import 'package:finapp/domain/models/dashboard_models.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/dashboard/dashboard_controller.dart';
-import 'package:finapp/features/dashboard/dashboard_state.dart';
-import 'package:finapp/features/dashboard/providers/dashboard_providers.dart';
 import 'package:finapp/features/dashboard/widgets/account_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

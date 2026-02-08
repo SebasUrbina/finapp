@@ -1,4 +1,4 @@
-import 'package:finapp/features/dashboard/dashboard_state.dart';
+import 'package:finapp/domain/models/dashboard_models.dart';
 import 'package:flutter/material.dart';
 
 class PeriodSelector extends StatelessWidget {

@@ -1,8 +1,7 @@
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/dashboard/dashboard_controller.dart';
 import 'package:finapp/features/dashboard/dashboard_state.dart';
-import 'package:finapp/features/dashboard/providers/dashboard_providers.dart';
-import 'package:finapp/features/dashboard/widgets/transaction_list_item.dart';
+import 'package:finapp/features/dashboard/widgets/recent_transactions_list.dart';
 import 'package:finapp/features/dashboard/widgets/category_settings_modal/category_settings_modal.dart';
 import 'package:finapp/features/dashboard/widgets/account_card_stack.dart';
 import 'package:finapp/features/dashboard/widgets/transaction_search_modal.dart';
@@ -13,95 +12,6 @@ import 'package:finapp/features/transaction_edit/transaction_edit_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-
-class RecentTransactionsList extends ConsumerWidget {
-  final List<Transaction> transactions;
-  final void Function(Transaction)? onTransactionTap;
-
-  const RecentTransactionsList({
-    super.key,
-    required this.transactions,
-    this.onTransactionTap,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (transactions.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardTheme.color,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              Icons.receipt_long_outlined,
-              size: 48,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Sin transacciones en este período',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Agrega tu primer gasto o ingreso',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final controller = ref.watch(dashboardControllerProvider.notifier);
-    final theme = Theme.of(context);
-    final items = transactions.take(5).toList();
-
-    return Column(
-      children: items.map((transaction) {
-        final category = controller.getCategoryById(transaction.categoryId);
-        final account = controller.getAccountById(transaction.accountId);
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Container(
-            decoration: BoxDecoration(
-              color: theme.cardTheme.color,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(
-                    alpha: theme.brightness == Brightness.dark ? 0.2 : 0.05,
-                  ),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: TransactionListItem(
-              transaction: transaction,
-              category: category,
-              account: account,
-              onTap: onTransactionTap != null
-                  ? () => onTransactionTap!(transaction)
-                  : null,
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -118,8 +28,8 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final state = ref.watch(dashboardControllerProvider);
-    final controller = ref.watch(dashboardControllerProvider.notifier);
+    final asyncState = ref.watch(dashboardStateProvider);
+    final periodFilter = ref.watch(dashboardPeriodProvider);
 
     final isDark = theme.brightness == Brightness.dark;
 
@@ -139,138 +49,153 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ),
         child: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              // Header Section
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    children: [
-                      // Top Row with buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: theme.cardTheme.color,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.settings_outlined,
-                                color: colors.onSurface,
-                              ),
-                              onPressed: () =>
-                                  _showCategorySettings(context, state),
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 22,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colors.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.calendar_today_outlined,
-                                  size: 14,
-                                  color: colors.primary,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  _formatDate(DateTime.now()),
-                                  style: theme.textTheme.labelMedium?.copyWith(
-                                    color: colors.primary,
-                                    fontWeight: FontWeight.w600,
+          child: asyncState.when(
+            skipLoadingOnReload: true, // Prevents flicker during refresh
+            data: (state) => CustomScrollView(
+              slivers: [
+                // Header Section
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      children: [
+                        // Top Row with buttons
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: theme.cardTheme.color,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
                                   ),
+                                ],
+                              ),
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.settings_outlined,
+                                  color: colors.onSurface,
                                 ),
-                              ],
+                                onPressed: () =>
+                                    _showCategorySettings(context, state),
+                              ),
                             ),
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: theme.cardTheme.color,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 22,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.calendar_today_outlined,
+                                    size: 14,
+                                    color: colors.primary,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    _formatDate(
+                                      DateTime.now(),
+                                    ), // Or use state.period.start
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: colors.primary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            child: ThemeToggleButton(),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Account Card Stack
-              SliverToBoxAdapter(
-                child: AccountCardStack(
-                  accounts: state.accounts,
-                  selectedAccountId: state.selectedAccountId,
-                  selectedPeriod: state.period,
-                  onAccountChanged: controller.setSelectedAccount,
-                  onPeriodChanged: controller.setPeriod,
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
-
-              // Financial Metrics Row
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: const SliverToBoxAdapter(child: FinancialMetricsRow()),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-              // Recent Transactions Section
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverToBoxAdapter(
-                  child: SectionHeader(
-                    title: 'Transacciones recientes',
-                    actionLabel: 'Ver todo',
-                    onActionTap: () => _showTransactionSearch(context, state),
-                  ),
-                ),
-              ),
-
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
-
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverToBoxAdapter(
-                  child: RecentTransactionsList(
-                    transactions: ref.watch(
-                      dashboardFilteredTransactionsProvider,
+                            Container(
+                              decoration: BoxDecoration(
+                                color: theme.cardTheme.color,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ThemeToggleButton(),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                     ),
-                    onTransactionTap: (tx) => _showTransactionEdit(context, tx),
                   ),
                 ),
-              ),
-              // Bottom padding for FAB
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
+
+                // Account Card Stack
+                SliverToBoxAdapter(
+                  child: AccountCardStack(
+                    accounts: state.accounts,
+                    selectedAccountId: state.selectedAccountId,
+                    selectedPeriod: periodFilter,
+                    onAccountChanged: (id) => ref
+                        .read(dashboardSelectedAccountProvider.notifier)
+                        .setSelectedAccount(id),
+                    onPeriodChanged: (period) => ref
+                        .read(dashboardPeriodProvider.notifier)
+                        .setFilter(period),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+                // Financial Metrics Row
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: const SliverToBoxAdapter(
+                    child: FinancialMetricsRow(),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+                // Recent Transactions Section
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverToBoxAdapter(
+                    child: SectionHeader(
+                      title: 'Transacciones recientes',
+                      actionLabel: 'Ver todo',
+                      onActionTap: () => _showTransactionSearch(context, state),
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverToBoxAdapter(
+                    child: RecentTransactionsList(
+                      transactions: ref.watch(
+                        dashboardFilteredTransactionsProvider,
+                      ),
+                      onTransactionTap: (tx) =>
+                          _showTransactionEdit(context, tx),
+                    ),
+                  ),
+                ),
+                // Bottom padding for FAB
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
+            ),
+            error: (err, stack) => Center(child: Text('Error: $err')),
+            loading: () => const Center(child: CircularProgressIndicator()),
           ),
         ),
       ),

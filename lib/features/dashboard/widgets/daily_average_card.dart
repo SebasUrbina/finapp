@@ -1,6 +1,7 @@
 import 'package:finapp/core/utils/currency_formatter.dart';
+import 'package:finapp/domain/models/dashboard_models.dart';
 import 'package:finapp/features/dashboard/dashboard_controller.dart';
-import 'package:finapp/features/dashboard/providers/dashboard_providers.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

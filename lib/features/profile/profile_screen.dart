@@ -101,7 +101,7 @@ class ProfileScreen extends ConsumerWidget {
                 height: 50,
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    ref.read(authControllerProvider.notifier).logout();
+                    ref.read(authControllerProvider.notifier).signOut();
                   },
                   icon: const Icon(Icons.logout, color: Colors.red),
                   label: const Text(

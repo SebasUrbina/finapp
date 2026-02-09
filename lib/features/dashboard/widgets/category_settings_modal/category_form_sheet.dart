@@ -167,12 +167,12 @@ class _CategoryFormSheetState extends ConsumerState<CategoryFormSheet> {
                       },
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  Text('Tags sugeridos', style: theme.textTheme.titleSmall),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
+                  Text('Tags', style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 8),
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: 6,
+                    runSpacing: 6,
                     children: widget.allTags.map((tag) {
                       final isSelected = _selectedTagIds.contains(tag.id);
                       return FilterChip(
@@ -193,15 +193,24 @@ class _CategoryFormSheetState extends ConsumerState<CategoryFormSheet> {
                           color: isSelected
                               ? colors.onPrimaryContainer
                               : colors.onSurface,
-                          fontSize: 12,
+                          fontSize: 11,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   // Split Configuration Section
                   // CategorySplitConfigurator(

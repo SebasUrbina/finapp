@@ -191,23 +191,34 @@ class _TopCategoryCardState extends ConsumerState<TopCategoryCard> {
           if (totalPages > 1)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(totalPages, (index) {
-                  final isActive = _currentPage == index;
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    height: 4,
-                    width: isActive ? 12 : 4,
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? const Color(0xFF9C27B0)
-                          : const Color(0xFF9C27B0).withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(2),
+              child: SizedBox(
+                height: 4,
+                child: Center(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(totalPages, (index) {
+                        final isActive = _currentPage == index;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          height: 4,
+                          width: isActive ? 12 : 4,
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? const Color(0xFF9C27B0)
+                                : const Color(
+                                    0xFF9C27B0,
+                                  ).withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        );
+                      }),
                     ),
-                  );
-                }),
+                  ),
+                ),
               ),
             ),
         ],

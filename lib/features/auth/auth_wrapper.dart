@@ -4,6 +4,7 @@ import 'auth_controller.dart';
 import 'splash_screen.dart';
 import 'onboarding_screen.dart';
 import 'signup_screen.dart';
+import 'setup_wrapper.dart';
 import '../../core/navigation/app_shell.dart';
 
 class AuthWrapper extends ConsumerWidget {
@@ -11,17 +12,26 @@ class AuthWrapper extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authControllerProvider);
+    final authStateAsync = ref.watch(authControllerProvider);
 
-    switch (authState.status) {
-      case AuthStatus.initial:
-        return const SplashScreen();
-      case AuthStatus.onboarding:
-        return const OnboardingScreen();
-      case AuthStatus.unauthenticated:
-        return const SignUpScreen();
-      case AuthStatus.authenticated:
-        return const AppShell();
-    }
+    return authStateAsync.when(
+      data: (authState) {
+        switch (authState.status) {
+          case AuthStatus.initial:
+            return const SplashScreen();
+          case AuthStatus.onboarding:
+            return const OnboardingScreen();
+          case AuthStatus.unauthenticated:
+            return const SignUpScreen();
+          case AuthStatus.setup:
+            return const SetupWrapper();
+          case AuthStatus.authenticated:
+            return const AppShell();
+        }
+      },
+      loading: () => const SplashScreen(),
+      error: (error, stack) =>
+          Scaffold(body: Center(child: Text('Error de autenticación: $error'))),
+    );
   }
 }

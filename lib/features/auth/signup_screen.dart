@@ -24,24 +24,18 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
+    final authStateAsync = ref.watch(authControllerProvider);
 
     // Show error message if present
-    ref.listen<AuthState>(authControllerProvider, (previous, next) {
-      if (next.errorMessage != null) {
+    ref.listen<AsyncValue<AuthState>>(authControllerProvider, (previous, next) {
+      if (next is AsyncError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(next.errorMessage!),
+            content: Text(next.error.toString()),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
         );
-        // Clear error after showing
-        Future.delayed(const Duration(seconds: 3), () {
-          if (mounted) {
-            ref.read(authControllerProvider.notifier).clearError();
-          }
-        });
       }
     });
 
@@ -96,7 +90,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton(
-                        onPressed: authState.isLoading
+                        onPressed: authStateAsync.isLoading
                             ? null
                             : () => ref
                                   .read(authControllerProvider.notifier)
@@ -116,7 +110,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             Icon(
                               Icons.g_mobiledata,
                               size: 32,
-                              color: authState.isLoading
+                              color: authStateAsync.isLoading
                                   ? Colors.grey
                                   : Colors.black,
                             ),
@@ -126,7 +120,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: authState.isLoading
+                                color: authStateAsync.isLoading
                                     ? Colors.grey
                                     : Colors.black,
                               ),
@@ -216,7 +210,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 ),
               ),
               // Loading overlay
-              if (authState.isLoading)
+              if (authStateAsync.isLoading)
                 Container(
                   color: Colors.black.withValues(alpha: 0.3),
                   child: const Center(

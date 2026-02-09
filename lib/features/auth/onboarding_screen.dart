@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'auth_constants.dart';
 import 'auth_controller.dart';
+import 'category_setup_screen.dart';
+import 'account_setup_screen.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -92,9 +94,33 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                               curve: Curves.easeInOut,
                             );
                           } else {
-                            ref
-                                .read(authControllerProvider.notifier)
-                                .completeOnboarding();
+                            // Navigate to category setup
+                            if (context.mounted) {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (_) => CategorySetupScreen(
+                                    onComplete: () {
+                                      // After category setup, go to account setup
+                                      Navigator.of(context).pushReplacement(
+                                        MaterialPageRoute(
+                                          builder: (_) => AccountSetupScreen(
+                                            onComplete: () {
+                                              // Finally complete onboarding
+                                              ref
+                                                  .read(
+                                                    authControllerProvider
+                                                        .notifier,
+                                                  )
+                                                  .completeOnboarding();
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              );
+                            }
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -163,7 +189,7 @@ class OnboardingPage extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AuthConstants.primaryPurple.withOpacity(0.1),
+                      color: AuthConstants.primaryPurple.withValues(alpha: 0.1),
                       blurRadius: 40,
                       spreadRadius: 10,
                     ),

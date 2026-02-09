@@ -334,19 +334,22 @@ class TransactionEditSheet extends ConsumerWidget {
   ) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('¿Eliminar transacción?'),
         content: const Text('Esta acción no se puede deshacer.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context); // Close dialog
+              // Close dialog first
+              Navigator.pop(dialogContext);
+              // Close sheet before deleting to prevent flicker
+              Navigator.pop(context);
+              // Now delete (this will trigger reload and rebuild)
               await notifier.delete();
-              if (context.mounted) Navigator.pop(context); // Close sheet
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Eliminar'),

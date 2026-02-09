@@ -120,8 +120,10 @@ class QuickEntrySheet extends ConsumerWidget {
                             : 'Guardar Transacción',
                         onPressed: state.canSubmit
                             ? () async {
+                                // Close modal first to prevent flicker
+                                Navigator.pop(context);
+                                // Now submit (this will trigger reload and rebuild)
                                 await notifier.submit();
-                                if (context.mounted) Navigator.pop(context);
                               }
                             : null,
                       ),

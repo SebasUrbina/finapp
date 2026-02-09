@@ -7,7 +7,7 @@ part of 'quick_entry_controller.dart';
 // **************************************************************************
 
 String _$quickEntryControllerHash() =>
-    r'814d6de20dd3cdc40ce7afe4adec8fad42f552df';
+    r'45bdd39044be548529846159cebe0fe12be46fe6';
 
 /// See also [QuickEntryController].
 @ProviderFor(QuickEntryController)

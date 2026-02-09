@@ -91,9 +91,9 @@ class QuickEntryController extends _$QuickEntryController {
     final userId = ref.read(currentUserIdProvider);
     await ref.read(financeRepositoryProvider).addTransaction(userId, tx);
 
-    // Invalidate providers to refresh data
-    ref.invalidate(transactionsProvider);
-    ref.invalidate(accountsProvider);
-    // Budgets and Insights will also update automatically if they watch transactionsProvider
+    // Silent reload to update lists without flicker
+    await ref.read(transactionsProvider.notifier).reload();
+    await ref.read(accountsProvider.notifier).reload();
+    await ref.read(budgetsProvider.notifier).reload();
   }
 }

@@ -230,24 +230,26 @@ class BudgetScreen extends ConsumerWidget {
                                   color: colors.onErrorContainer,
                                 ),
                               ),
-                              onDismissed: (direction) {
-                                controller.deleteBudget(item.budgetId);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Presupuesto de ${item.category.name} eliminado',
+                              onDismissed: (direction) async {
+                                await controller.deleteBudget(item.budgetId);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Presupuesto de ${item.category.name} eliminado',
+                                      ),
+                                      action: SnackBarAction(
+                                        label: 'Deshacer',
+                                        onPressed: () {
+                                          controller.addBudget(
+                                            item.category.id,
+                                            item.limit.value,
+                                          );
+                                        },
+                                      ),
                                     ),
-                                    action: SnackBarAction(
-                                      label: 'Deshacer',
-                                      onPressed: () {
-                                        controller.addBudget(
-                                          item.category.id,
-                                          item.limit.value,
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                );
+                                  );
+                                }
                               },
                               child: GestureDetector(
                                 onTap: () =>
@@ -283,8 +285,11 @@ class BudgetScreen extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       builder: (context) => CreateBudgetSheet(
         availableCategories: controller.availableCategories,
-        onSave: (categoryId, limit) {
-          controller.addBudget(categoryId, limit);
+        onSave: (categoryId, limit) async {
+          // Close modal first to prevent flicker
+          Navigator.pop(context);
+          // Now add budget (this will trigger reload and rebuild)
+          await controller.addBudget(categoryId, limit);
         },
       ),
     );
@@ -302,11 +307,17 @@ class BudgetScreen extends ConsumerWidget {
       builder: (context) => BudgetFormSheet(
         category: data.category,
         currentLimit: data.limit.value,
-        onSave: (newLimit) {
-          controller.updateBudgetByCategory(data.category.id, newLimit);
+        onSave: (newLimit) async {
+          // Close modal first to prevent flicker
+          Navigator.pop(context);
+          // Now update budget (this will trigger reload and rebuild)
+          await controller.updateBudgetByCategory(data.category.id, newLimit);
         },
-        onDelete: () {
-          controller.deleteBudget(data.budgetId);
+        onDelete: () async {
+          // Close modal first to prevent flicker
+          Navigator.pop(context);
+          // Now delete budget (this will trigger reload and rebuild)
+          await controller.deleteBudget(data.budgetId);
         },
       ),
     );

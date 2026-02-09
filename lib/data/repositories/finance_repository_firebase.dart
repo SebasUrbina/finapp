@@ -223,6 +223,36 @@ class FinanceRepositoryFirebase implements FinanceRepository {
     );
   }
 
+  @override
+  Future<void> addBudget(String userId, Budget budget) {
+    return _addDocument(
+      userId: userId,
+      collectionPath: 'budgets',
+      item: budget,
+      id: budget.id,
+      toMap: budget.toMap,
+    );
+  }
+
+  @override
+  Future<void> updateBudget(String userId, Budget budget) {
+    return _updateDocument(
+      userId: userId,
+      collectionPath: 'budgets',
+      id: budget.id,
+      toMap: budget.toMap,
+    );
+  }
+
+  @override
+  Future<void> deleteBudget(String userId, String budgetId) {
+    return _deleteDocument(
+      userId: userId,
+      collectionPath: 'budgets',
+      id: budgetId,
+    );
+  }
+
   // --- Persons ---
 
   @override

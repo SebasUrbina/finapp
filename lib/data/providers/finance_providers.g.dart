@@ -714,7 +714,7 @@ final tagsProvider = AutoDisposeAsyncNotifierProvider<Tags, List<Tag>>.internal(
 );
 
 typedef _$Tags = AutoDisposeAsyncNotifier<List<Tag>>;
-String _$budgetsFamilyHash() => r'a6a675eb4813cf99aa8d304c061367a7e7ab98e8';
+String _$budgetsFamilyHash() => r'7b4a2af6ad0580b04c67780f7ecd7641b43642b7';
 
 abstract class _$BudgetsFamily
     extends BuildlessAutoDisposeAsyncNotifier<List<Budget>> {
@@ -858,7 +858,7 @@ class _BudgetsFamilyProviderElement
   String get userId => (origin as BudgetsFamilyProvider).userId;
 }
 
-String _$budgetsHash() => r'ea1c33c70021b969311a173615dd8d901431f75d';
+String _$budgetsHash() => r'24b084d92115eda3109902301f8d548ff1652061';
 
 /// Wrapper provider PÚBLICO
 ///

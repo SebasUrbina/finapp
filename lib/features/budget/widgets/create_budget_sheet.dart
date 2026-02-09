@@ -187,7 +187,7 @@ class _CreateBudgetSheetState extends State<CreateBudgetSheet> {
                 ? null
                 : () {
                     widget.onSave(_selectedCategoryId!, _limit);
-                    Navigator.pop(context);
+                    // Modal is closed by parent callback
                   },
             style: ElevatedButton.styleFrom(
               backgroundColor: colors.primary,

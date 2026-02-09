@@ -150,7 +150,7 @@ class _BudgetFormSheetState extends State<BudgetFormSheet> {
                 child: FilledButton(
                   onPressed: () {
                     widget.onSave(_limit);
-                    Navigator.pop(context);
+                    // Modal is closed by parent callback
                   },
                   style: FilledButton.styleFrom(
                     shape: RoundedRectangleBorder(
@@ -192,7 +192,7 @@ class _BudgetFormSheetState extends State<BudgetFormSheet> {
 
     if (confirm == true) {
       widget.onDelete?.call();
-      if (context.mounted) Navigator.pop(context);
+      // Modal is closed by parent callback
     }
   }
 }

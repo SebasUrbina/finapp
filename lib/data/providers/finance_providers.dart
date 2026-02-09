@@ -226,6 +226,24 @@ class BudgetsFamily extends _$BudgetsFamily {
     return repo.getBudgets(userId);
   }
 
+  Future<void> addBudget(Budget budget) async {
+    final repo = ref.read(financeRepositoryProvider);
+    await repo.addBudget(userId, budget);
+    state = await AsyncValue.guard(() => repo.getBudgets(userId));
+  }
+
+  Future<void> updateBudget(Budget budget) async {
+    final repo = ref.read(financeRepositoryProvider);
+    await repo.updateBudget(userId, budget);
+    state = await AsyncValue.guard(() => repo.getBudgets(userId));
+  }
+
+  Future<void> deleteBudget(String budgetId) async {
+    final repo = ref.read(financeRepositoryProvider);
+    await repo.deleteBudget(userId, budgetId);
+    state = await AsyncValue.guard(() => repo.getBudgets(userId));
+  }
+
   Future<void> reload() async {
     final repo = ref.read(financeRepositoryProvider);
     state = await AsyncValue.guard(() => repo.getBudgets(userId));
@@ -239,6 +257,23 @@ class Budgets extends _$Budgets {
   Future<List<Budget>> build() async {
     final userId = ref.watch(currentUserIdProvider);
     return ref.watch(budgetsFamilyProvider(userId).future);
+  }
+
+  Future<void> addBudget(Budget budget) async {
+    final userId = ref.read(currentUserIdProvider);
+    await ref.read(budgetsFamilyProvider(userId).notifier).addBudget(budget);
+  }
+
+  Future<void> updateBudget(Budget budget) async {
+    final userId = ref.read(currentUserIdProvider);
+    await ref.read(budgetsFamilyProvider(userId).notifier).updateBudget(budget);
+  }
+
+  Future<void> deleteBudget(String budgetId) async {
+    final userId = ref.read(currentUserIdProvider);
+    await ref
+        .read(budgetsFamilyProvider(userId).notifier)
+        .deleteBudget(budgetId);
   }
 
   Future<void> reload() async {

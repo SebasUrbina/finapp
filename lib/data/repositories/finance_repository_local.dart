@@ -47,6 +47,24 @@ class FinanceRepositoryLocal implements FinanceRepository {
       List.from(LocalDataService.budgets);
 
   @override
+  Future<void> addBudget(String userId, Budget budget) async {
+    LocalDataService.budgets.add(budget);
+  }
+
+  @override
+  Future<void> updateBudget(String userId, Budget budget) async {
+    final index = LocalDataService.budgets.indexWhere((b) => b.id == budget.id);
+    if (index != -1) {
+      LocalDataService.budgets[index] = budget;
+    }
+  }
+
+  @override
+  Future<void> deleteBudget(String userId, String budgetId) async {
+    LocalDataService.budgets.removeWhere((b) => b.id == budgetId);
+  }
+
+  @override
   Future<List<Person>> getPersons(String userId) async =>
       List.from(LocalDataService.persons);
 

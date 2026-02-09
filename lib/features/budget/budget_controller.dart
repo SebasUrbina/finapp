@@ -64,37 +64,12 @@ class BudgetController extends _$BudgetController {
       period: BudgetPeriod.monthly,
     );
 
-    // Optimistic update
-    if (state.hasValue) {
-      final currentBudgets = state.value!.budgets;
-      state = AsyncData(
-        state.value!.copyWith(budgets: [...currentBudgets, newBudget]),
-      );
-    }
+    // Persist to repository via provider
+    await ref.read(budgetsProvider.notifier).addBudget(newBudget);
 
-    // Call repository (assuming functionality exists or this was local only in the original code)
-    // The original code only updated state. Assuming provider is synced with repo elsewhere or this is local state for now.
-    // If budgetsProvider is a stream from database, we should add to database.
-    // However, original code just updated state.budgets.
-    // But budgetsProvider is watched in build().
-    // If I update local state, it might be overwritten by next stream update if not saved to DB.
-    // For now, I will keep the behavior of modifying the state, but ideally this should call a repository.
-    // Since I don't see a budget repository method call in the original code, I will stick to state update but acknowledge this might be transient if using a stream.
-    // Actually, check `financeRepositoryProvider` usage in other controllers.
-    // `QuickEntryController` calls `ref.read(financeRepositoryProvider).addTransaction`.
-    // So I should probably check if there is `addBudget`.
-    // But I will stick to original logic: just update state.
-    // Wait, if I update `state`, and `state` comes from `build()` which watches `budgetsProvider`,
-    // my manual update will be overwritten if `budgetsProvider` emits new value.
-    // But for now let's just update the local state to match original behavior.
+    // Reload state to reflect changes
+    ref.invalidateSelf();
   }
-
-  // Actually, looking at original code:
-  // state = state.copyWith(budgets: [...state.budgets, newBudget]);
-  // Use `ref.read(budgetsProvider.notifier)` if it's a notifier?
-  // But `budgetsProvider` is likely a StreamProvider or FutureProvider given `ref.watch(budgetsProvider)`.
-  // If it's a stream, we should add to the source.
-  // The user didn't ask to fix this logic, just the type errors.
 
   // Getter logic moved to methods/getters on the class
 
@@ -412,24 +387,29 @@ class BudgetController extends _$BudgetController {
     return tips.take(4).toList();
   }
 
-  void updateBudget(String budgetId, double newLimit) {
+  Future<void> updateBudget(String budgetId, double newLimit) async {
     if (!state.hasValue) return;
-    final updatedBudgets = state.value!.budgets.map((b) {
-      if (b.id == budgetId) {
-        return Budget(
-          id: b.id,
-          target: b.target,
-          limit: Money(newLimit),
-          period: b.period,
-        );
-      }
-      return b;
-    }).toList();
 
-    state = AsyncData(state.value!.copyWith(budgets: updatedBudgets));
+    // Find the budget to update
+    final budget = state.value!.budgets.firstWhere((b) => b.id == budgetId);
+    final updatedBudget = Budget(
+      id: budget.id,
+      target: budget.target,
+      limit: Money(newLimit),
+      period: budget.period,
+    );
+
+    // Persist to repository via provider
+    await ref.read(budgetsProvider.notifier).updateBudget(updatedBudget);
+
+    // Reload state to reflect changes
+    ref.invalidateSelf();
   }
 
-  void updateBudgetByCategory(String categoryId, double newLimit) {
+  Future<void> updateBudgetByCategory(
+    String categoryId,
+    double newLimit,
+  ) async {
     if (!state.hasValue) return;
     final budgetIndex = state.value!.budgets.indexWhere(
       (b) =>
@@ -438,16 +418,18 @@ class BudgetController extends _$BudgetController {
     );
 
     if (budgetIndex != -1) {
-      updateBudget(state.value!.budgets[budgetIndex].id, newLimit);
+      await updateBudget(state.value!.budgets[budgetIndex].id, newLimit);
     }
   }
 
-  void deleteBudget(String budgetId) {
+  Future<void> deleteBudget(String budgetId) async {
     if (!state.hasValue) return;
-    final updatedBudgets = state.value!.budgets
-        .where((b) => b.id != budgetId)
-        .toList();
-    state = AsyncData(state.value!.copyWith(budgets: updatedBudgets));
+
+    // Persist to repository via provider
+    await ref.read(budgetsProvider.notifier).deleteBudget(budgetId);
+
+    // Reload state to reflect changes
+    ref.invalidateSelf();
   }
 }
 

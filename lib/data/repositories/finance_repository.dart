@@ -18,6 +18,10 @@ abstract class FinanceRepository {
   Future<void> deleteTag(String userId, String tagId);
 
   Future<List<Budget>> getBudgets(String userId);
+  Future<void> addBudget(String userId, Budget budget);
+  Future<void> updateBudget(String userId, Budget budget);
+  Future<void> deleteBudget(String userId, String budgetId);
+
   Future<List<Person>> getPersons(String userId);
   // Crud transaction
   Future<void> addTransaction(String userId, Transaction tx);

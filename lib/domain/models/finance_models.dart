@@ -44,6 +44,8 @@ class Category {
     this.defaultSplit,
   });
 
+  CategoryIcon get categoryIcon => icon;
+
   IconData get iconData => CategoryIconMapper.toIcon(icon);
 
   Color getColor(BuildContext context) =>
@@ -62,6 +64,28 @@ class Category {
       icon: icon ?? this.icon,
       tagIds: tagIds ?? this.tagIds,
       defaultSplit: defaultSplit ?? this.defaultSplit,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'icon': icon.index,
+      'tagIds': tagIds,
+      'defaultSplit': defaultSplit?.toMap(),
+    };
+  }
+
+  factory Category.fromMap(Map<String, dynamic> map) {
+    return Category(
+      id: map['id'] ?? '',
+      name: map['name'] ?? '',
+      icon: CategoryIcon.values[map['icon'] as int? ?? 0],
+      tagIds: List<String>.from(map['tagIds'] ?? []),
+      defaultSplit: map['defaultSplit'] != null
+          ? Split.fromMap(map['defaultSplit'])
+          : null,
     );
   }
 }
@@ -84,6 +108,19 @@ class Tag {
     required this.type,
     required this.color,
   });
+
+  Map<String, dynamic> toMap() {
+    return {'id': id, 'name': name, 'type': type.index, 'color': color.value};
+  }
+
+  factory Tag.fromMap(Map<String, dynamic> map) {
+    return Tag(
+      id: map['id'] ?? '',
+      name: map['name'] ?? '',
+      type: TagType.values[map['type'] as int? ?? 0],
+      color: Color(map['color'] as int? ?? 0xFF000000),
+    );
+  }
 }
 
 enum TagType {
@@ -152,6 +189,36 @@ class Transaction {
       recurringRuleId: recurringRuleId ?? this.recurringRuleId,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'amount': amount.value,
+      'type': type.index,
+      'date': date.millisecondsSinceEpoch,
+      'accountId': accountId,
+      'toAccountId': toAccountId,
+      'categoryId': categoryId,
+      'description': description,
+      'split': split?.toMap(),
+      'recurringRuleId': recurringRuleId,
+    };
+  }
+
+  factory Transaction.fromMap(Map<String, dynamic> map) {
+    return Transaction(
+      id: map['id'] ?? '',
+      amount: Money((map['amount'] as num?)?.toDouble() ?? 0.0),
+      type: TransactionType.values[map['type'] as int? ?? 0],
+      date: DateTime.fromMillisecondsSinceEpoch(map['date'] as int? ?? 0),
+      accountId: map['accountId'] ?? '',
+      toAccountId: map['toAccountId'],
+      categoryId: map['categoryId'],
+      description: map['description'],
+      split: map['split'] != null ? Split.fromMap(map['split']) : null,
+      recurringRuleId: map['recurringRuleId'],
+    );
+  }
 }
 
 enum TransactionType { expense, income, transfer }
@@ -173,6 +240,24 @@ class Split {
   final List<SplitParticipant> participants;
 
   const Split({required this.type, required this.participants});
+
+  Map<String, dynamic> toMap() {
+    return {
+      'type': type.index,
+      'participants': participants.map((x) => x.toMap()).toList(),
+    };
+  }
+
+  factory Split.fromMap(Map<String, dynamic> map) {
+    return Split(
+      type: SplitType.values[map['type'] as int? ?? 0],
+      participants: List<SplitParticipant>.from(
+        (map['participants'] as List<dynamic>? ?? []).map<SplitParticipant>(
+          (x) => SplitParticipant.fromMap(x as Map<String, dynamic>),
+        ),
+      ),
+    );
+  }
 }
 
 class SplitParticipant {
@@ -180,7 +265,20 @@ class SplitParticipant {
   final double value;
   // porcentaje (0–1) o monto según type
 
+  // porcentaje (0–1) o monto según type
+
   const SplitParticipant({required this.personId, required this.value});
+
+  Map<String, dynamic> toMap() {
+    return {'personId': personId, 'value': value};
+  }
+
+  factory SplitParticipant.fromMap(Map<String, dynamic> map) {
+    return SplitParticipant(
+      personId: map['personId'] ?? '',
+      value: (map['value'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
 }
 
 // Budget
@@ -213,6 +311,42 @@ class Budget {
     required this.limit,
     required this.period,
   });
+
+  Map<String, dynamic> toMap() {
+    final Map<String, dynamic> targetMap = {};
+    if (target is CategoryBudgetTarget) {
+      targetMap['type'] = 'category';
+      targetMap['categoryId'] = (target as CategoryBudgetTarget).categoryId;
+    } else if (target is TagBudgetTarget) {
+      targetMap['type'] = 'tag';
+      targetMap['tagId'] = (target as TagBudgetTarget).tagId;
+    }
+
+    return {
+      'id': id,
+      'target': targetMap,
+      'limit': limit.value,
+      'period': period.index,
+    };
+  }
+
+  factory Budget.fromMap(Map<String, dynamic> map) {
+    BudgetTarget target;
+    final targetMap = map['target'] as Map<String, dynamic>? ?? {};
+    if (targetMap['type'] == 'tag') {
+      target = TagBudgetTarget(targetMap['tagId'] ?? '');
+    } else {
+      // Default to category
+      target = CategoryBudgetTarget(targetMap['categoryId'] ?? '');
+    }
+
+    return Budget(
+      id: map['id'] ?? '',
+      target: target,
+      limit: Money((map['limit'] as num?)?.toDouble() ?? 0.0),
+      period: BudgetPeriod.values[map['period'] as int? ?? 0],
+    );
+  }
 }
 
 // Person
@@ -221,6 +355,14 @@ class Person {
   final String name;
 
   const Person({required this.id, required this.name});
+
+  Map<String, dynamic> toMap() {
+    return {'id': id, 'name': name};
+  }
+
+  factory Person.fromMap(Map<String, dynamic> map) {
+    return Person(id: map['id'] ?? '', name: map['name'] ?? '');
+  }
 }
 
 // Account
@@ -244,6 +386,22 @@ class CreditCardInfo {
     required this.closingDay,
     required this.dueDay,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'creditLimit': creditLimit.value,
+      'closingDay': closingDay,
+      'dueDay': dueDay,
+    };
+  }
+
+  factory CreditCardInfo.fromMap(Map<String, dynamic> map) {
+    return CreditCardInfo(
+      creditLimit: Money((map['creditLimit'] as num?)?.toDouble() ?? 0.0),
+      closingDay: map['closingDay'] as int? ?? 1,
+      dueDay: map['dueDay'] as int? ?? 10,
+    );
+  }
 }
 
 class Account {
@@ -286,6 +444,34 @@ class Account {
       color: color ?? this.color,
       balance: balance ?? this.balance,
       creditInfo: creditInfo ?? this.creditInfo,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'type': type.index,
+      'balance': balance.value,
+      'icon': icon?.codePoint,
+      'color': color?.value,
+      'creditInfo': creditInfo?.toMap(),
+    };
+  }
+
+  factory Account.fromMap(Map<String, dynamic> map) {
+    return Account(
+      id: map['id'] ?? '',
+      name: map['name'] ?? '',
+      type: AccountType.values[map['type'] as int? ?? 0],
+      balance: Money((map['balance'] as num?)?.toDouble() ?? 0.0),
+      icon: map['icon'] != null
+          ? IconData(map['icon'] as int, fontFamily: 'MaterialIcons')
+          : null,
+      color: map['color'] != null ? Color(map['color'] as int) : null,
+      creditInfo: map['creditInfo'] != null
+          ? CreditCardInfo.fromMap(map['creditInfo'])
+          : null,
     );
   }
 }
@@ -339,4 +525,52 @@ class RecurringRule {
     this.lastGeneratedAt,
     this.generatedCount = 0,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'amount': amount.value,
+      'type': type.index,
+      'accountId': accountId,
+      'toAccountId': toAccountId,
+      'categoryId': categoryId,
+      'description': description,
+      'split': split?.toMap(),
+      'frequency': frequency.index,
+      'interval': interval,
+      'startDate': startDate.millisecondsSinceEpoch,
+      'endDate': endDate?.millisecondsSinceEpoch,
+      'maxOccurrences': maxOccurrences,
+      'status': status.index,
+      'lastGeneratedAt': lastGeneratedAt?.millisecondsSinceEpoch,
+      'generatedCount': generatedCount,
+    };
+  }
+
+  factory RecurringRule.fromMap(Map<String, dynamic> map) {
+    return RecurringRule(
+      id: map['id'] ?? '',
+      amount: Money((map['amount'] as num?)?.toDouble() ?? 0.0),
+      type: TransactionType.values[map['type'] as int? ?? 0],
+      accountId: map['accountId'] ?? '',
+      toAccountId: map['toAccountId'],
+      categoryId: map['categoryId'],
+      description: map['description'],
+      split: map['split'] != null ? Split.fromMap(map['split']) : null,
+      frequency: RecurrenceFrequency.values[map['frequency'] as int? ?? 0],
+      interval: map['interval'] as int? ?? 1,
+      startDate: DateTime.fromMillisecondsSinceEpoch(
+        map['startDate'] as int? ?? 0,
+      ),
+      endDate: map['endDate'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['endDate'] as int)
+          : null,
+      maxOccurrences: map['maxOccurrences'] as int?,
+      status: RecurringStatus.values[map['status'] as int? ?? 0],
+      lastGeneratedAt: map['lastGeneratedAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['lastGeneratedAt'] as int)
+          : null,
+      generatedCount: map['generatedCount'] as int? ?? 0,
+    );
+  }
 }

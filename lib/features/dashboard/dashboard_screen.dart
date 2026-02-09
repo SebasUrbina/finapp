@@ -77,7 +77,7 @@ class DashboardScreen extends ConsumerWidget {
                               ),
                               child: IconButton(
                                 icon: Icon(
-                                  Icons.settings_outlined,
+                                  Icons.category,
                                   color: colors.onSurface,
                                 ),
                                 onPressed: () =>

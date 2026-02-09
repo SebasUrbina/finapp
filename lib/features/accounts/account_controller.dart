@@ -1,4 +1,5 @@
 import 'package:finapp/data/providers/finance_providers.dart';
+import 'package:finapp/data/providers/current_user_provider.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,8 +11,9 @@ class AccountController extends StateNotifier<AsyncValue<void>> {
   Future<void> addAccount(Account account) async {
     state = const AsyncValue.loading();
     try {
+      final userId = _ref.read(currentUserIdProvider);
       final repo = _ref.read(financeRepositoryProvider);
-      await repo.addAccount(account);
+      await repo.addAccount(userId, account);
       await _ref.read(accountsProvider.notifier).reload(); // Silent reload
       state = const AsyncValue.data(null);
     } catch (e, stack) {
@@ -22,8 +24,9 @@ class AccountController extends StateNotifier<AsyncValue<void>> {
   Future<void> updateAccount(Account account) async {
     state = const AsyncValue.loading();
     try {
+      final userId = _ref.read(currentUserIdProvider);
       final repo = _ref.read(financeRepositoryProvider);
-      await repo.updateAccount(account);
+      await repo.updateAccount(userId, account);
       await _ref.read(accountsProvider.notifier).reload();
       state = const AsyncValue.data(null);
     } catch (e, stack) {
@@ -34,8 +37,9 @@ class AccountController extends StateNotifier<AsyncValue<void>> {
   Future<void> deleteAccount(String accountId) async {
     state = const AsyncValue.loading();
     try {
+      final userId = _ref.read(currentUserIdProvider);
       final repo = _ref.read(financeRepositoryProvider);
-      await repo.deleteAccount(accountId);
+      await repo.deleteAccount(userId, accountId);
       await _ref.read(accountsProvider.notifier).reload();
       // Also reload transactions as they might be affected or need cleanup?
       // Assuming cascade delete or similar is handled by repo/logic.

@@ -1,6 +1,7 @@
 import 'package:finapp/data/services/local_data_service.dart';
 import 'package:finapp/data/repositories/finance_repository.dart';
 import 'package:finapp/domain/models/finance_models.dart';
+import 'package:finapp/domain/models/default_categories.dart';
 
 class FinanceRepositoryLocal implements FinanceRepository {
   // Note: deberiamos usar el servicio como input del repositorio.
@@ -8,31 +9,54 @@ class FinanceRepositoryLocal implements FinanceRepository {
   // final LocalDataService _localDataService;
 
   @override
-  Future<List<Account>> getAccounts() async => List.from(LocalDataService.accounts);
+  Future<List<Account>> getAccounts(String userId) async =>
+      List.from(LocalDataService.accounts);
 
   @override
-  Future<List<Transaction>> getTransactions() async =>
+  Future<List<Transaction>> getTransactions(String userId) async =>
       List.from(LocalDataService.transactions);
 
   @override
-  Future<List<Category>> getCategories() async => List.from(LocalDataService.categories);
+  Future<List<Category>> getCategories(String userId) async =>
+      List.from(LocalDataService.categories);
 
   @override
-  Future<List<Tag>> getTags() async => List.from(LocalDataService.tags);
+  Future<List<Tag>> getTags(String userId) async =>
+      List.from(LocalDataService.tags);
 
   @override
-  Future<List<Budget>> getBudgets() async => List.from(LocalDataService.budgets);
+  Future<void> addTag(String userId, Tag tag) async {
+    LocalDataService.tags.add(tag);
+  }
 
   @override
-  Future<List<Person>> getPersons() async => List.from(LocalDataService.persons);
+  Future<void> updateTag(String userId, Tag tag) async {
+    final index = LocalDataService.tags.indexWhere((t) => t.id == tag.id);
+    if (index != -1) {
+      LocalDataService.tags[index] = tag;
+    }
+  }
 
   @override
-  Future<void> addTransaction(Transaction tx) async {
+  Future<void> deleteTag(String userId, String tagId) async {
+    LocalDataService.tags.removeWhere((t) => t.id == tagId);
+  }
+
+  @override
+  Future<List<Budget>> getBudgets(String userId) async =>
+      List.from(LocalDataService.budgets);
+
+  @override
+  Future<List<Person>> getPersons(String userId) async =>
+      List.from(LocalDataService.persons);
+
+  @override
+  Future<void> addTransaction(String userId, Transaction tx) async {
     LocalDataService.transactions.add(tx);
   }
 
   @override
-  Future<void> updateTransaction(Transaction tx) async {
+  Future<void> updateTransaction(String userId, Transaction tx) async {
     final index = LocalDataService.transactions.indexWhere(
       (t) => t.id == tx.id,
     );
@@ -42,17 +66,17 @@ class FinanceRepositoryLocal implements FinanceRepository {
   }
 
   @override
-  Future<void> deleteTransaction(String transactionId) async {
+  Future<void> deleteTransaction(String userId, String transactionId) async {
     LocalDataService.transactions.removeWhere((t) => t.id == transactionId);
   }
 
   @override
-  Future<void> addCategory(Category cat) async {
+  Future<void> addCategory(String userId, Category cat) async {
     LocalDataService.categories.add(cat);
   }
 
   @override
-  Future<void> updateCategory(Category cat) async {
+  Future<void> updateCategory(String userId, Category cat) async {
     final index = LocalDataService.categories.indexWhere((c) => c.id == cat.id);
     if (index != -1) {
       LocalDataService.categories[index] = cat;
@@ -60,7 +84,7 @@ class FinanceRepositoryLocal implements FinanceRepository {
   }
 
   @override
-  Future<void> deleteCategory(String categoryId) async {
+  Future<void> deleteCategory(String userId, String categoryId) async {
     LocalDataService.categories.removeWhere((c) => c.id == categoryId);
     // Also remove from transactions for safety (optional but good practice in mock)
     LocalDataService.transactions
@@ -71,12 +95,12 @@ class FinanceRepositoryLocal implements FinanceRepository {
   }
 
   @override
-  Future<void> addAccount(Account acc) async {
+  Future<void> addAccount(String userId, Account acc) async {
     LocalDataService.accounts.add(acc);
   }
 
   @override
-  Future<void> updateAccount(Account acc) async {
+  Future<void> updateAccount(String userId, Account acc) async {
     final index = LocalDataService.accounts.indexWhere((a) => a.id == acc.id);
     if (index != -1) {
       LocalDataService.accounts[index] = acc;
@@ -84,18 +108,18 @@ class FinanceRepositoryLocal implements FinanceRepository {
   }
 
   @override
-  Future<void> deleteAccount(String accountId) async {
+  Future<void> deleteAccount(String userId, String accountId) async {
     LocalDataService.accounts.removeWhere((a) => a.id == accountId);
     // Optionally: remove transactions associated? Usually we shouldn't unless requested.
   }
 
   @override
-  Future<void> addPerson(Person person) async {
+  Future<void> addPerson(String userId, Person person) async {
     LocalDataService.persons.add(person);
   }
 
   @override
-  Future<void> updatePerson(Person person) async {
+  Future<void> updatePerson(String userId, Person person) async {
     final index = LocalDataService.persons.indexWhere((p) => p.id == person.id);
     if (index != -1) {
       LocalDataService.persons[index] = person;
@@ -103,8 +127,18 @@ class FinanceRepositoryLocal implements FinanceRepository {
   }
 
   @override
-  Future<void> deletePerson(String personId) async {
+  Future<void> deletePerson(String userId, String personId) async {
     LocalDataService.persons.removeWhere((p) => p.id == personId);
+  }
+
+  @override
+  Future<void> loadDefaultCategories(String userId) async {
+    // Only load if categories are empty to avoid duplicates
+    if (LocalDataService.categories.isEmpty) {
+      LocalDataService.categories.addAll(
+        DefaultCategories.predefinedCategories,
+      );
+    }
   }
 }
 

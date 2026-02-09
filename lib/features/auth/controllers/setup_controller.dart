@@ -14,11 +14,12 @@ class SetupController extends _$SetupController {
 
   Future<void> loadDefaultCategories() async {
     final authState = ref.read(authControllerProvider);
-    if (authState.value?.user == null) return;
+    final userId = authState.value?.userId;
+    if (userId == null) return;
 
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await ref.read(financeRepositoryProvider).loadDefaultCategories();
+      await ref.read(financeRepositoryProvider).loadDefaultCategories(userId);
       // Invalidate categories provider to refresh UI
       ref.invalidate(categoriesProvider);
     });
@@ -26,11 +27,12 @@ class SetupController extends _$SetupController {
 
   Future<void> createAccount(Account account) async {
     final authState = ref.read(authControllerProvider);
-    if (authState.value?.user == null) return;
+    final userId = authState.value?.userId;
+    if (userId == null) return;
 
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await ref.read(financeRepositoryProvider).addAccount(account);
+      await ref.read(financeRepositoryProvider).addAccount(userId, account);
       // Invalidate accounts provider
       ref.invalidate(accountsProvider);
 

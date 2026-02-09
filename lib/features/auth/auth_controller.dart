@@ -18,7 +18,9 @@ class AuthController extends _$AuthController {
   Future<AuthState> _checkUserStatus(User user) async {
     try {
       // Check if user needs setup (no accounts)
-      final accounts = await ref.read(financeRepositoryProvider).getAccounts();
+      final accounts = await ref
+          .read(financeRepositoryProvider)
+          .getAccounts(user.uid);
       final needsSetup = accounts.isEmpty;
 
       return AuthState(

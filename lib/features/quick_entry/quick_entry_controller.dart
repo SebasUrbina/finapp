@@ -1,4 +1,5 @@
 import 'package:finapp/data/providers/finance_providers.dart';
+import 'package:finapp/data/providers/current_user_provider.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/quick_entry/quick_entry_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -87,7 +88,8 @@ class QuickEntryController extends _$QuickEntryController {
       description: currentState.description,
     );
 
-    await ref.read(financeRepositoryProvider).addTransaction(tx);
+    final userId = ref.read(currentUserIdProvider);
+    await ref.read(financeRepositoryProvider).addTransaction(userId, tx);
 
     // Invalidate providers to refresh data
     ref.invalidate(transactionsProvider);

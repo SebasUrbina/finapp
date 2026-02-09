@@ -1,4 +1,5 @@
 import 'package:finapp/data/providers/finance_providers.dart';
+import 'package:finapp/data/providers/current_user_provider.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/transaction_edit/transaction_edit_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -98,7 +99,10 @@ class TransactionEditController extends _$TransactionEditController {
       description: currentState.description,
     );
 
-    await ref.read(financeRepositoryProvider).updateTransaction(updatedTx);
+    final userId = ref.read(currentUserIdProvider);
+    await ref
+        .read(financeRepositoryProvider)
+        .updateTransaction(userId, updatedTx);
 
     // Silent reload to update lists without flicker
     await ref.read(transactionsProvider.notifier).reload();
@@ -110,7 +114,8 @@ class TransactionEditController extends _$TransactionEditController {
     if (!state.hasValue) return;
     final txId = state.value!.transactionId;
 
-    await ref.read(financeRepositoryProvider).deleteTransaction(txId);
+    final userId = ref.read(currentUserIdProvider);
+    await ref.read(financeRepositoryProvider).deleteTransaction(userId, txId);
 
     // Silent reload
     await ref.read(transactionsProvider.notifier).reload();

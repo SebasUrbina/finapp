@@ -357,7 +357,7 @@ Future<DashboardState> dashboardState(Ref ref) async {
     transactions: ref.watch(dashboardFilteredTransactionsProvider),
     accounts: await ref.watch(accountsProvider.future),
     categories: await ref.watch(categoriesProvider.future),
-    tags: await ref.watch(tagsProvider.future),
+    tags: await ref.watch(allTagsProvider.future),
     selectedAccountId: ref.watch(dashboardSelectedAccountProvider),
     metrics: ref.watch(dashboardMetricsProvider),
     period: ref.watch(dashboardDateRangeProvider),

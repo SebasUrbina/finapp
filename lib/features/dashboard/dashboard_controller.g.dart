@@ -414,7 +414,7 @@ final dashboardDailySpendingTrendProvider =
 // ignore: unused_element
 typedef DashboardDailySpendingTrendRef =
     AutoDisposeProviderRef<List<DailySpendingData>>;
-String _$dashboardStateHash() => r'88beabdaef8fbfb4bc779d3f0fc6e4976bf6e54b';
+String _$dashboardStateHash() => r'98c592120224b27cbe88bba23983bd68a72f5bf8';
 
 /// See also [dashboardState].
 @ProviderFor(dashboardState)

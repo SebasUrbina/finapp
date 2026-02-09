@@ -1,4 +1,5 @@
 import 'package:finapp/domain/models/finance_models.dart';
+import 'package:finapp/core/constants/predefined_tags.dart';
 import 'package:finapp/data/repositories/finance_repository.dart';
 import 'package:finapp/data/providers/current_user_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,7 +22,7 @@ final financeRepositoryProvider = Provider<FinanceRepository>((ref) {
 @riverpod
 class TransactionsFamily extends _$TransactionsFamily {
   @override
-  Future<List<Transaction>> build(String userId) async { 
+  Future<List<Transaction>> build(String userId) async {
     final repo = ref.watch(financeRepositoryProvider);
     return repo.getTransactions(userId);
   }
@@ -148,18 +149,68 @@ class Categories extends _$Categories {
 // TAGS
 // ============================================================================
 
-/// Family provider INTERNO
+/// Family provider INTERNO para tags del usuario
 @riverpod
-Future<List<Tag>> _tagsFamily(Ref ref, String userId) async {
-  final repo = ref.watch(financeRepositoryProvider);
-  return repo.getTags(userId);
+class TagsFamily extends _$TagsFamily {
+  @override
+  Future<List<Tag>> build(String userId) async {
+    final repo = ref.watch(financeRepositoryProvider);
+    return repo.getTags(userId);
+  }
+
+  Future<void> addTag(Tag tag) async {
+    final userId = ref.read(currentUserIdProvider);
+    final repo = ref.read(financeRepositoryProvider);
+    await repo.addTag(userId, tag);
+    ref.invalidateSelf();
+  }
+
+  Future<void> updateTag(Tag tag) async {
+    final userId = ref.read(currentUserIdProvider);
+    final repo = ref.read(financeRepositoryProvider);
+    await repo.updateTag(userId, tag);
+    ref.invalidateSelf();
+  }
+
+  Future<void> deleteTag(String tagId) async {
+    final userId = ref.read(currentUserIdProvider);
+    final repo = ref.read(financeRepositoryProvider);
+    await repo.deleteTag(userId, tagId);
+    ref.invalidateSelf();
+  }
 }
 
-/// Wrapper provider PÚBLICO
+/// Wrapper provider PÚBLICO para tags del usuario
 @riverpod
-Future<List<Tag>> tags(Ref ref) async {
-  final userId = ref.watch(currentUserIdProvider);
-  return ref.watch(_tagsFamilyProvider(userId).future);
+class Tags extends _$Tags {
+  @override
+  Future<List<Tag>> build() async {
+    final userId = ref.watch(currentUserIdProvider);
+    return ref.watch(tagsFamilyProvider(userId).future);
+  }
+
+  Future<void> addTag(Tag tag) async {
+    final userId = ref.read(currentUserIdProvider);
+    await ref.read(tagsFamilyProvider(userId).notifier).addTag(tag);
+  }
+
+  Future<void> updateTag(Tag tag) async {
+    final userId = ref.read(currentUserIdProvider);
+    await ref.read(tagsFamilyProvider(userId).notifier).updateTag(tag);
+  }
+
+  Future<void> deleteTag(String tagId) async {
+    final userId = ref.read(currentUserIdProvider);
+    await ref.read(tagsFamilyProvider(userId).notifier).deleteTag(tagId);
+  }
+}
+
+/// Provider que combina tags predefinidos + del usuario
+@riverpod
+Future<List<Tag>> allTags(Ref ref) async {
+  final userTags = await ref.watch(tagsProvider.future);
+  final predefinedTags = PredefinedTags.all;
+  return [...predefinedTags, ...userTags];
 }
 
 // ============================================================================
@@ -244,9 +295,7 @@ class Persons extends _$Persons {
 
   Future<void> updatePerson(Person person) async {
     final userId = ref.read(currentUserIdProvider);
-    await ref
-        .read(personsFamilyProvider(userId).notifier)
-        .updatePerson(person);
+    await ref.read(personsFamilyProvider(userId).notifier).updatePerson(person);
   }
 
   Future<void> deletePerson(String personId) async {

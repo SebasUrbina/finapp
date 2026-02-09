@@ -6,7 +6,27 @@ part of 'finance_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$tagsFamilyHash() => r'27dffb3d5a416cc207d855d10f9f4c5c259ef3a9';
+String _$allTagsHash() => r'eeca72bfaec1ea7faaa677557ca7bfc53e9b7173';
+
+/// Provider que combina tags predefinidos + del usuario
+///
+/// Copied from [allTags].
+@ProviderFor(allTags)
+final allTagsProvider = AutoDisposeFutureProvider<List<Tag>>.internal(
+  allTags,
+  name: r'allTagsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$allTagsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef AllTagsRef = AutoDisposeFutureProviderRef<List<Tag>>;
+String _$transactionsFamilyHash() =>
+    r'eaec77ef5cc222aedd96cdf59ed0b56109ea3cd3';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -28,157 +48,6 @@ class _SystemHash {
     return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
   }
 }
-
-/// Family provider INTERNO
-///
-/// Copied from [_tagsFamily].
-@ProviderFor(_tagsFamily)
-const _tagsFamilyProvider = _TagsFamilyFamily();
-
-/// Family provider INTERNO
-///
-/// Copied from [_tagsFamily].
-class _TagsFamilyFamily extends Family<AsyncValue<List<Tag>>> {
-  /// Family provider INTERNO
-  ///
-  /// Copied from [_tagsFamily].
-  const _TagsFamilyFamily();
-
-  /// Family provider INTERNO
-  ///
-  /// Copied from [_tagsFamily].
-  _TagsFamilyProvider call(String userId) {
-    return _TagsFamilyProvider(userId);
-  }
-
-  @override
-  _TagsFamilyProvider getProviderOverride(
-    covariant _TagsFamilyProvider provider,
-  ) {
-    return call(provider.userId);
-  }
-
-  static const Iterable<ProviderOrFamily>? _dependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
-
-  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
-
-  @override
-  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
-      _allTransitiveDependencies;
-
-  @override
-  String? get name => r'_tagsFamilyProvider';
-}
-
-/// Family provider INTERNO
-///
-/// Copied from [_tagsFamily].
-class _TagsFamilyProvider extends AutoDisposeFutureProvider<List<Tag>> {
-  /// Family provider INTERNO
-  ///
-  /// Copied from [_tagsFamily].
-  _TagsFamilyProvider(String userId)
-    : this._internal(
-        (ref) => _tagsFamily(ref as _TagsFamilyRef, userId),
-        from: _tagsFamilyProvider,
-        name: r'_tagsFamilyProvider',
-        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-            ? null
-            : _$tagsFamilyHash,
-        dependencies: _TagsFamilyFamily._dependencies,
-        allTransitiveDependencies: _TagsFamilyFamily._allTransitiveDependencies,
-        userId: userId,
-      );
-
-  _TagsFamilyProvider._internal(
-    super._createNotifier, {
-    required super.name,
-    required super.dependencies,
-    required super.allTransitiveDependencies,
-    required super.debugGetCreateSourceHash,
-    required super.from,
-    required this.userId,
-  }) : super.internal();
-
-  final String userId;
-
-  @override
-  Override overrideWith(
-    FutureOr<List<Tag>> Function(_TagsFamilyRef provider) create,
-  ) {
-    return ProviderOverride(
-      origin: this,
-      override: _TagsFamilyProvider._internal(
-        (ref) => create(ref as _TagsFamilyRef),
-        from: from,
-        name: null,
-        dependencies: null,
-        allTransitiveDependencies: null,
-        debugGetCreateSourceHash: null,
-        userId: userId,
-      ),
-    );
-  }
-
-  @override
-  AutoDisposeFutureProviderElement<List<Tag>> createElement() {
-    return _TagsFamilyProviderElement(this);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is _TagsFamilyProvider && other.userId == userId;
-  }
-
-  @override
-  int get hashCode {
-    var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, userId.hashCode);
-
-    return _SystemHash.finish(hash);
-  }
-}
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-mixin _TagsFamilyRef on AutoDisposeFutureProviderRef<List<Tag>> {
-  /// The parameter `userId` of this provider.
-  String get userId;
-}
-
-class _TagsFamilyProviderElement
-    extends AutoDisposeFutureProviderElement<List<Tag>>
-    with _TagsFamilyRef {
-  _TagsFamilyProviderElement(super.provider);
-
-  @override
-  String get userId => (origin as _TagsFamilyProvider).userId;
-}
-
-String _$tagsHash() => r'7e1b1c76e79de3f32a2e47b510bca1c15f5aaae7';
-
-/// Wrapper provider PÚBLICO
-///
-/// Copied from [tags].
-@ProviderFor(tags)
-final tagsProvider = AutoDisposeFutureProvider<List<Tag>>.internal(
-  tags,
-  name: r'tagsProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$tagsHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef TagsRef = AutoDisposeFutureProviderRef<List<Tag>>;
-String _$transactionsFamilyHash() =>
-    r'eaec77ef5cc222aedd96cdf59ed0b56109ea3cd3';
 
 abstract class _$TransactionsFamily
     extends BuildlessAutoDisposeAsyncNotifier<List<Transaction>> {
@@ -685,6 +554,166 @@ final categoriesProvider =
     );
 
 typedef _$Categories = AutoDisposeAsyncNotifier<List<Category>>;
+String _$tagsFamilyHash() => r'ac33fd62724e0bc55f00e592ad9a503b39f1e46e';
+
+abstract class _$TagsFamily
+    extends BuildlessAutoDisposeAsyncNotifier<List<Tag>> {
+  late final String userId;
+
+  FutureOr<List<Tag>> build(String userId);
+}
+
+/// Family provider INTERNO para tags del usuario
+///
+/// Copied from [TagsFamily].
+@ProviderFor(TagsFamily)
+const tagsFamilyProvider = TagsFamilyFamily();
+
+/// Family provider INTERNO para tags del usuario
+///
+/// Copied from [TagsFamily].
+class TagsFamilyFamily extends Family<AsyncValue<List<Tag>>> {
+  /// Family provider INTERNO para tags del usuario
+  ///
+  /// Copied from [TagsFamily].
+  const TagsFamilyFamily();
+
+  /// Family provider INTERNO para tags del usuario
+  ///
+  /// Copied from [TagsFamily].
+  TagsFamilyProvider call(String userId) {
+    return TagsFamilyProvider(userId);
+  }
+
+  @override
+  TagsFamilyProvider getProviderOverride(
+    covariant TagsFamilyProvider provider,
+  ) {
+    return call(provider.userId);
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'tagsFamilyProvider';
+}
+
+/// Family provider INTERNO para tags del usuario
+///
+/// Copied from [TagsFamily].
+class TagsFamilyProvider
+    extends AutoDisposeAsyncNotifierProviderImpl<TagsFamily, List<Tag>> {
+  /// Family provider INTERNO para tags del usuario
+  ///
+  /// Copied from [TagsFamily].
+  TagsFamilyProvider(String userId)
+    : this._internal(
+        () => TagsFamily()..userId = userId,
+        from: tagsFamilyProvider,
+        name: r'tagsFamilyProvider',
+        debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+            ? null
+            : _$tagsFamilyHash,
+        dependencies: TagsFamilyFamily._dependencies,
+        allTransitiveDependencies: TagsFamilyFamily._allTransitiveDependencies,
+        userId: userId,
+      );
+
+  TagsFamilyProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.userId,
+  }) : super.internal();
+
+  final String userId;
+
+  @override
+  FutureOr<List<Tag>> runNotifierBuild(covariant TagsFamily notifier) {
+    return notifier.build(userId);
+  }
+
+  @override
+  Override overrideWith(TagsFamily Function() create) {
+    return ProviderOverride(
+      origin: this,
+      override: TagsFamilyProvider._internal(
+        () => create()..userId = userId,
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        userId: userId,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeAsyncNotifierProviderElement<TagsFamily, List<Tag>>
+  createElement() {
+    return _TagsFamilyProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is TagsFamilyProvider && other.userId == userId;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, userId.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+mixin TagsFamilyRef on AutoDisposeAsyncNotifierProviderRef<List<Tag>> {
+  /// The parameter `userId` of this provider.
+  String get userId;
+}
+
+class _TagsFamilyProviderElement
+    extends AutoDisposeAsyncNotifierProviderElement<TagsFamily, List<Tag>>
+    with TagsFamilyRef {
+  _TagsFamilyProviderElement(super.provider);
+
+  @override
+  String get userId => (origin as TagsFamilyProvider).userId;
+}
+
+String _$tagsHash() => r'd8c01d5989a1968c82d8cb41954ba9402d3ac753';
+
+/// Wrapper provider PÚBLICO para tags del usuario
+///
+/// Copied from [Tags].
+@ProviderFor(Tags)
+final tagsProvider = AutoDisposeAsyncNotifierProvider<Tags, List<Tag>>.internal(
+  Tags.new,
+  name: r'tagsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$tagsHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$Tags = AutoDisposeAsyncNotifier<List<Tag>>;
 String _$budgetsFamilyHash() => r'a6a675eb4813cf99aa8d304c061367a7e7ab98e8';
 
 abstract class _$BudgetsFamily

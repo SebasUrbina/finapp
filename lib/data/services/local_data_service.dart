@@ -9,7 +9,7 @@ class LocalDataService {
   // Persons
   static List<Person> persons = [const Person(id: 'p1', name: 'Maria Paz')];
 
-  // Tags
+  // Tags (user-created tags, predefined tags are in code)
   static List<Tag> tags = [
     Tag(
       id: 'tg_fixed',

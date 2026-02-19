@@ -1,226 +1,153 @@
 import 'package:finapp/core/constants/category_icons.dart';
 import 'package:finapp/core/utils/currency_formatter.dart';
 import 'package:finapp/features/dashboard/dashboard_controller.dart';
+import 'package:finapp/features/dashboard/widgets/metric_card.dart';
+import 'package:finapp/domain/models/dashboard_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class TopCategoryCard extends ConsumerStatefulWidget {
+class TopCategoryCard extends ConsumerWidget {
   const TopCategoryCard({super.key});
 
   @override
-  ConsumerState<TopCategoryCard> createState() => _TopCategoryCardState();
-}
-
-class _TopCategoryCardState extends ConsumerState<TopCategoryCard> {
-  late PageController _pageController;
-  int _currentPage = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final stateAsync = ref.watch(dashboardStateProvider);
-    final tags = stateAsync.valueOrNull?.tags ?? [];
+    final period = ref.watch(dashboardPeriodProvider);
+    final top = ref.watch(dashboardTopCategoryByTagProvider(null));
+    final totalExpensesAmount = ref.watch(
+      dashboardTotalExpensesProvider.select((m) => m.value),
+    );
+    const accent = Color(0xFF9C27B0);
 
-    // List of tags including "null" for "Todas"
-    final List<String?> tagIds = [null, ...tags.map((t) => t.id)];
-    final totalPages = tagIds.length;
+    final pct = (top != null && totalExpensesAmount > 0)
+        ? (top.value.value / totalExpensesAmount).clamp(0.0, 1.0)
+        : 0.0;
 
-    return Container(
-      height: 170, // Fixed height for consistency
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF9C27B0).withValues(alpha: 0.15),
-            const Color(0xFFBA68C8).withValues(alpha: 0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF9C27B0).withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
+    final periodLabel = switch (period) {
+      PeriodFilter.year => 'este año',
+      PeriodFilter.month => 'este mes',
+      PeriodFilter.week => 'esta sem.',
+    };
+
+    return MetricCard(
+      accent: accent,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentPage = index;
-                });
-              },
-              itemCount: totalPages,
-              itemBuilder: (context, index) {
-                final tagId = tagIds[index];
-                final tagName = index == 0 ? 'Todas' : tags[index - 1].name;
-                final topCategoryEntry = ref.watch(
-                  dashboardTopCategoryByTagProvider(tagId),
-                );
-                final totalExpenses = ref
-                    .watch(dashboardTotalExpensesProvider)
-                    .value;
-
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Top',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: colors.onSurfaceVariant,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                0xFF9C27B0,
-                              ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              tagName,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(
-                                  0xFF9C27B0,
-                                ).withValues(alpha: 0.8),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      if (topCategoryEntry != null) ...[
-                        Row(
-                          children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: const Color(
-                                  0xFF9C27B0,
-                                ).withValues(alpha: 0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                CategoryIconMapper.toIcon(
-                                  topCategoryEntry.key.icon,
-                                ),
-                                color: const Color(0xFF9C27B0),
-                                size: 16,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                topCategoryEntry.key.name,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(
-                                    0xFF9C27B0,
-                                  ).withValues(alpha: 0.9),
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          topCategoryEntry.value.toCurrency(),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colors.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        if (totalExpenses > 0)
-                          Text(
-                            '${((topCategoryEntry.value.value / totalExpenses) * 100).toStringAsFixed(0)}% del total',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colors.onSurfaceVariant,
-                              fontSize: 10,
-                            ),
-                          ),
-                      ] else ...[
-                        const Expanded(
-                          child: Center(
-                            child: Text(
-                              'Sin gastos',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-          // Page Indicator (Dots)
-          if (totalPages > 1)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: SizedBox(
-                height: 4,
-                child: Center(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(totalPages, (index) {
-                        final isActive = _currentPage == index;
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          height: 4,
-                          width: isActive ? 12 : 4,
-                          decoration: BoxDecoration(
-                            color: isActive
-                                ? const Color(0xFF9C27B0)
-                                : const Color(
-                                    0xFF9C27B0,
-                                  ).withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        );
-                      }),
-                    ),
+          // ── Header ───────────────────────────────────────────────────
+          Row(
+            children: [
+              Icon(
+                Icons.bar_chart_rounded,
+                size: 11,
+                color: accent.withValues(alpha: 0.7),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  'Mayor gasto · $periodLabel',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    fontSize: 9,
                   ),
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          if (top != null) ...[
+            // ── Icon + name row ────────────────────────────────────────
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    CategoryIconMapper.toIcon(top.key.icon),
+                    color: accent,
+                    size: 15,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    top.key.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colors.onSurface,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 8),
+
+            // ── Amount ────────────────────────────────────────────────
+            Text(
+              top.value.toCurrency(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: accent,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // ── Progress bar ──────────────────────────────────────────
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: pct,
+                minHeight: 4,
+                backgroundColor: accent.withValues(alpha: 0.12),
+                valueColor: AlwaysStoppedAnimation<Color>(accent),
+              ),
+            ),
+            const SizedBox(height: 5),
+
+            // ── Pct pill ──────────────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${(pct * 100).toStringAsFixed(0)}% del total',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: accent,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 20),
+            Center(
+              child: Text(
+                'Sin gastos\nregistrados',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                  fontSize: 10,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

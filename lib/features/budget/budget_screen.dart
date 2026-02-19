@@ -1,3 +1,4 @@
+import 'package:finapp/core/widgets/error_view.dart';
 import 'package:finapp/features/budget/budget_controller.dart';
 import 'package:finapp/features/budget/budget_state.dart';
 import 'package:finapp/features/budget/widgets/budget_form_sheet.dart';
@@ -39,7 +40,10 @@ class BudgetScreen extends ConsumerWidget {
           child: asyncState.when(
             skipLoadingOnReload: true, // Prevents flicker
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('Error: $err')),
+            error: (err, stack) => ErrorView(
+              error: err,
+              onRetry: () => ref.invalidate(budgetControllerProvider),
+            ),
             data: (state) {
               final categoryBudgets = controller.categoryBudgets;
               final totalSpent = controller.totalSpent;

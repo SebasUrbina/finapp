@@ -12,7 +12,12 @@ part 'current_user_provider.g.dart';
 @riverpod
 String currentUserId(Ref ref) {
   final authState = ref.watch(authControllerProvider);
-  // requireValue lanza excepción si está en loading/error
-  // userId! es safe porque auth guard garantiza usuario autenticado
-  return authState.requireValue.userId!;
+  final userId = authState.valueOrNull?.userId;
+  if (userId == null) {
+    throw StateError(
+      'No authenticated user. '
+      'Ensure the auth guard is in place before accessing this provider.',
+    );
+  }
+  return userId;
 }

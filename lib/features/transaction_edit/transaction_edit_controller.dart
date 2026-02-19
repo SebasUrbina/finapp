@@ -86,40 +86,56 @@ class TransactionEditController extends _$TransactionEditController {
     );
   }
 
-  Future<void> submit() async {
-    if (!state.hasValue || !state.value!.canSubmit) return;
+  /// Returns true if the transaction was updated successfully.
+  Future<bool> submit() async {
+    if (!state.hasValue || !state.value!.canSubmit) return false;
     final currentState = state.value!;
 
-    final updatedTx = currentState.originalTransaction.copyWith(
-      accountId: currentState.selectedAccount!.id,
-      categoryId: currentState.selectedCategory!.id,
-      amount: Money(currentState.amount),
-      date: currentState.selectedDate,
-      type: currentState.type,
-      description: currentState.description,
-    );
+    try {
+      final updatedTx = currentState.originalTransaction.copyWith(
+        accountId: currentState.selectedAccount!.id,
+        categoryId: currentState.selectedCategory!.id,
+        amount: Money(currentState.amount),
+        date: currentState.selectedDate,
+        type: currentState.type,
+        description: currentState.description,
+      );
 
-    final userId = ref.read(currentUserIdProvider);
-    await ref
-        .read(financeRepositoryProvider)
-        .updateTransaction(userId, updatedTx);
+      final userId = ref.read(currentUserIdProvider);
+      await ref
+          .read(financeRepositoryProvider)
+          .updateTransaction(userId, updatedTx);
 
-    // Silent reload to update lists without flicker
-    await ref.read(transactionsProvider.notifier).reload();
-    await ref.read(accountsProvider.notifier).reload();
-    await ref.read(budgetsProvider.notifier).reload();
+      // Silent reload to update lists without flicker
+      await ref.read(transactionsProvider.notifier).reload();
+      await ref.read(accountsProvider.notifier).reload();
+      await ref.read(budgetsProvider.notifier).reload();
+
+      return true;
+    } catch (e, stack) {
+      state = AsyncError(e, stack);
+      return false;
+    }
   }
 
-  Future<void> delete() async {
-    if (!state.hasValue) return;
+  /// Returns true if the transaction was deleted successfully.
+  Future<bool> delete() async {
+    if (!state.hasValue) return false;
     final txId = state.value!.transactionId;
 
-    final userId = ref.read(currentUserIdProvider);
-    await ref.read(financeRepositoryProvider).deleteTransaction(userId, txId);
+    try {
+      final userId = ref.read(currentUserIdProvider);
+      await ref.read(financeRepositoryProvider).deleteTransaction(userId, txId);
 
-    // Silent reload
-    await ref.read(transactionsProvider.notifier).reload();
-    await ref.read(accountsProvider.notifier).reload();
-    await ref.read(budgetsProvider.notifier).reload();
+      // Silent reload
+      await ref.read(transactionsProvider.notifier).reload();
+      await ref.read(accountsProvider.notifier).reload();
+      await ref.read(budgetsProvider.notifier).reload();
+
+      return true;
+    } catch (e, stack) {
+      state = AsyncError(e, stack);
+      return false;
+    }
   }
 }

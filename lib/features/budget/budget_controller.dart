@@ -1,10 +1,12 @@
 import 'package:finapp/data/providers/finance_providers.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/budget/budget_state.dart';
-import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:uuid/uuid.dart';
 
 part 'budget_controller.g.dart';
+
+const _uuid = Uuid();
 
 @riverpod
 class BudgetController extends _$BudgetController {
@@ -56,19 +58,25 @@ class BudgetController extends _$BudgetController {
     setDate(DateTime(currentDate.year, currentDate.month + 1));
   }
 
-  Future<void> addBudget(String categoryId, double limitValue) async {
-    final newBudget = Budget(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      target: CategoryBudgetTarget(categoryId),
-      limit: Money(limitValue),
-      period: BudgetPeriod.monthly,
-    );
+  Future<bool> addBudget(String categoryId, double limitValue) async {
+    try {
+      final newBudget = Budget(
+        id: _uuid.v4(),
+        target: CategoryBudgetTarget(categoryId),
+        limit: Money(limitValue),
+        period: BudgetPeriod.monthly,
+      );
 
-    // Persist to repository via provider
-    await ref.read(budgetsProvider.notifier).addBudget(newBudget);
+      // Persist to repository via provider
+      await ref.read(budgetsProvider.notifier).addBudget(newBudget);
 
-    // Reload state to reflect changes
-    ref.invalidateSelf();
+      // Reload state to reflect changes
+      ref.invalidateSelf();
+      return true;
+    } catch (e, stack) {
+      state = AsyncError(e, stack);
+      return false;
+    }
   }
 
   // Getter logic moved to methods/getters on the class
@@ -182,9 +190,9 @@ class BudgetController extends _$BudgetController {
   }
 
   double get remainingDailyBudget {
+    if (!state.hasValue) return 0;
     final remaining = totalBudgetLimit - totalSpent;
     if (remaining <= 0) return 0;
-    if (!state.hasValue) return 0;
 
     final now = DateTime.now();
     final selectedDate = state.value!.selectedDate;
@@ -387,23 +395,29 @@ class BudgetController extends _$BudgetController {
     return tips.take(4).toList();
   }
 
-  Future<void> updateBudget(String budgetId, double newLimit) async {
-    if (!state.hasValue) return;
+  Future<bool> updateBudget(String budgetId, double newLimit) async {
+    if (!state.hasValue) return false;
 
-    // Find the budget to update
-    final budget = state.value!.budgets.firstWhere((b) => b.id == budgetId);
-    final updatedBudget = Budget(
-      id: budget.id,
-      target: budget.target,
-      limit: Money(newLimit),
-      period: budget.period,
-    );
+    try {
+      // Find the budget to update
+      final budget = state.value!.budgets.firstWhere((b) => b.id == budgetId);
+      final updatedBudget = Budget(
+        id: budget.id,
+        target: budget.target,
+        limit: Money(newLimit),
+        period: budget.period,
+      );
 
-    // Persist to repository via provider
-    await ref.read(budgetsProvider.notifier).updateBudget(updatedBudget);
+      // Persist to repository via provider
+      await ref.read(budgetsProvider.notifier).updateBudget(updatedBudget);
 
-    // Reload state to reflect changes
-    ref.invalidateSelf();
+      // Reload state to reflect changes
+      ref.invalidateSelf();
+      return true;
+    } catch (e, stack) {
+      state = AsyncError(e, stack);
+      return false;
+    }
   }
 
   Future<void> updateBudgetByCategory(
@@ -422,14 +436,20 @@ class BudgetController extends _$BudgetController {
     }
   }
 
-  Future<void> deleteBudget(String budgetId) async {
-    if (!state.hasValue) return;
+  Future<bool> deleteBudget(String budgetId) async {
+    if (!state.hasValue) return false;
 
-    // Persist to repository via provider
-    await ref.read(budgetsProvider.notifier).deleteBudget(budgetId);
+    try {
+      // Persist to repository via provider
+      await ref.read(budgetsProvider.notifier).deleteBudget(budgetId);
 
-    // Reload state to reflect changes
-    ref.invalidateSelf();
+      // Reload state to reflect changes
+      ref.invalidateSelf();
+      return true;
+    } catch (e, stack) {
+      state = AsyncError(e, stack);
+      return false;
+    }
   }
 }
 

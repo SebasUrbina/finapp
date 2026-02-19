@@ -448,6 +448,23 @@ final dashboardPeriodProvider =
     );
 
 typedef _$DashboardPeriod = AutoDisposeNotifier<PeriodFilter>;
+String _$dashboardSavingsGoalHash() =>
+    r'a5f4c77a98ad02dce88dc71309977d5a7b597a96';
+
+/// See also [DashboardSavingsGoal].
+@ProviderFor(DashboardSavingsGoal)
+final dashboardSavingsGoalProvider =
+    AutoDisposeNotifierProvider<DashboardSavingsGoal, double>.internal(
+      DashboardSavingsGoal.new,
+      name: r'dashboardSavingsGoalProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$dashboardSavingsGoalHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+typedef _$DashboardSavingsGoal = AutoDisposeNotifier<double>;
 String _$dashboardSelectedAccountHash() =>
     r'dcb2d67fa30133a0b83d9e13199314e32a297b65';
 

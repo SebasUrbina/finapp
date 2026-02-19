@@ -19,7 +19,16 @@ class DashboardPeriod extends _$DashboardPeriod {
   void setFilter(PeriodFilter filter) => state = filter;
 }
 
-// 2. Filtro de Cuenta (Opcional)
+// 2. Meta de ahorro del usuario
+@riverpod
+class DashboardSavingsGoal extends _$DashboardSavingsGoal {
+  @override
+  double build() => 20.0;
+
+  void setGoal(double goal) => state = goal;
+}
+
+// 3. Filtro de Cuenta (Opcional)
 @riverpod
 class DashboardSelectedAccount extends _$DashboardSelectedAccount {
   @override

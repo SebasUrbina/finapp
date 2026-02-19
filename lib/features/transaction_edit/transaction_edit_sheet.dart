@@ -1,4 +1,6 @@
-import 'package:finapp/data/providers/finance_providers.dart';
+import 'package:finapp/core/widgets/app_pickers.dart';
+import 'package:finapp/core/widgets/error_view.dart';
+import 'package:finapp/core/widgets/sheet_container.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/transaction_edit/transaction_edit_controller.dart';
 import 'package:finapp/features/quick_entry/widgets/account_category_row.dart';
@@ -12,19 +14,151 @@ import 'package:finapp/features/quick_entry/widgets/recurrence_options.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class TransactionEditSheet extends ConsumerWidget {
+class TransactionEditSheet extends ConsumerStatefulWidget {
   final Transaction transaction;
 
   const TransactionEditSheet({super.key, required this.transaction});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Usar el provider family pasando la transacción
+  ConsumerState<TransactionEditSheet> createState() =>
+      _TransactionEditSheetState();
+}
+
+class _TransactionEditSheetState extends ConsumerState<TransactionEditSheet> {
+  bool _isSubmitting = false;
+  bool _isDeleting = false;
+
+  Future<void> _handleSubmit(BuildContext context) async {
+    if (_isSubmitting) return;
+    setState(() => _isSubmitting = true);
+
+    final notifier = ref.read(
+      transactionEditControllerProvider(widget.transaction).notifier,
+    );
+    final success = await notifier.submit();
+
+    if (!context.mounted) return;
+
+    if (success) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Text('Cambios guardados'),
+            ],
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.green.shade600,
+          duration: const Duration(seconds: 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } else {
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Text('Error al guardar. Intenta de nuevo.'),
+            ],
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Theme.of(context).colorScheme.error,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleDelete(BuildContext context) async {
+    if (_isDeleting) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('¿Eliminar transacción?'),
+        content: const Text('Esta acción no se puede deshacer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    setState(() => _isDeleting = true);
+
+    final notifier = ref.read(
+      transactionEditControllerProvider(widget.transaction).notifier,
+    );
+    final success = await notifier.delete();
+
+    if (!context.mounted) return;
+
+    if (success) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.delete_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Text('Transacción eliminada'),
+            ],
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red.shade600,
+          duration: const Duration(seconds: 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } else {
+      setState(() => _isDeleting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Text('Error al eliminar. Intenta de nuevo.'),
+            ],
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Theme.of(context).colorScheme.error,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final asyncState = ref.watch(
-      transactionEditControllerProvider(transaction),
+      transactionEditControllerProvider(widget.transaction),
     );
     final notifier = ref.read(
-      transactionEditControllerProvider(transaction).notifier,
+      transactionEditControllerProvider(widget.transaction).notifier,
     );
 
     return AnimatedPadding(
@@ -32,7 +166,7 @@ class TransactionEditSheet extends ConsumerWidget {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       duration: const Duration(milliseconds: 200),
-      child: _SheetContainer(
+      child: SheetContainer(
         child: asyncState.when(
           loading: () => const Center(
             child: Padding(
@@ -40,13 +174,18 @@ class TransactionEditSheet extends ConsumerWidget {
               child: CircularProgressIndicator(),
             ),
           ),
-          error: (err, stack) => Center(child: Text('Error: $err')),
+          error: (err, stack) => ErrorView(
+            error: err,
+            onRetry: () => ref.invalidate(
+              transactionEditControllerProvider(widget.transaction),
+            ),
+          ),
           data: (state) => SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Título y botón de eliminar
+                // Title and delete button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -58,23 +197,32 @@ class TransactionEditSheet extends ConsumerWidget {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                     ),
-                    IconButton(
-                      onPressed: () {
-                        _showDeleteConfirmation(context, notifier);
-                      },
-                      icon: const Icon(
-                        Icons.delete_outline_rounded,
-                        color: Colors.red,
-                      ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.red.withValues(alpha: 0.1),
-                      ),
-                    ),
+                    _isDeleting
+                        ? const SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : IconButton(
+                            onPressed: () => _handleDelete(context),
+                            icon: const Icon(
+                              Icons.delete_outline_rounded,
+                              color: Colors.red,
+                            ),
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.red.withValues(
+                                alpha: 0.1,
+                              ),
+                            ),
+                          ),
                   ],
                 ),
                 const SizedBox(height: 20),
 
-                // Monto y Tipo
+                // Amount and Type
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -93,21 +241,21 @@ class TransactionEditSheet extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
 
-                // Fecha
+                // Date
                 DateSelector(
                   selectedDate: state.selectedDate,
                   onChanged: notifier.setDate,
                 ),
                 const SizedBox(height: 16),
 
-                // Descripción
+                // Description
                 DescriptionInput(
                   initialValue: state.description,
                   onChanged: notifier.setDescription,
                 ),
                 const SizedBox(height: 12),
 
-                // Cuenta, Categoría y Recurrencia
+                // Account, Category, and Recurrence
                 Row(
                   children: [
                     Expanded(
@@ -115,10 +263,16 @@ class TransactionEditSheet extends ConsumerWidget {
                       child: AccountCategoryRow(
                         selectedAccount: state.selectedAccount,
                         selectedCategory: state.selectedCategory,
-                        onAccountTap: () =>
-                            _showAccountPicker(context, ref, notifier),
-                        onCategoryTap: () =>
-                            _showCategoryPicker(context, ref, notifier),
+                        onAccountTap: () => showAccountPicker(
+                          context,
+                          ref,
+                          onSelected: notifier.setAccount,
+                        ),
+                        onCategoryTap: () => showCategoryPicker(
+                          context,
+                          ref,
+                          onSelected: notifier.setCategory,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -144,16 +298,14 @@ class TransactionEditSheet extends ConsumerWidget {
 
                 const SizedBox(height: 24),
 
-                // Botón Guardar
+                // Save button
                 SaveButton(
                   label: state.isRecurring
                       ? 'Guardar Cambios Recurrentes'
                       : 'Guardar Cambios',
+                  isLoading: _isSubmitting,
                   onPressed: state.canSubmit
-                      ? () async {
-                          await notifier.submit();
-                          if (context.mounted) Navigator.pop(context);
-                        }
+                      ? () => _handleSubmit(context)
                       : null,
                 ),
               ],
@@ -161,227 +313,6 @@ class TransactionEditSheet extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-
-  void _showAccountPicker(
-    BuildContext context,
-    WidgetRef ref,
-    TransactionEditController notifier,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => Consumer(
-        builder: (context, ref, _) {
-          final colors = Theme.of(context).colorScheme;
-          final accountsAsync = ref.watch(accountsProvider);
-
-          return Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Seleccionar Cuenta',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: colors.primary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Flexible(
-                  child: accountsAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (err, stack) => Text('Error loading accounts: $err'),
-                    data: (accounts) => ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: accounts.length,
-                      itemBuilder: (context, index) {
-                        final account = accounts[index];
-                        return ListTile(
-                          leading: Icon(
-                            account.icon ?? Icons.account_balance_wallet,
-                            color: account.color ?? colors.primary,
-                          ),
-                          title: Text(
-                            account.name,
-                            style: TextStyle(color: colors.onSurface),
-                          ),
-                          subtitle: Text(
-                            r'$' + account.balance.value.toStringAsFixed(0),
-                            style: TextStyle(color: colors.onSurface),
-                          ),
-                          onTap: () {
-                            notifier.setAccount(account);
-                            Navigator.pop(context);
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  void _showCategoryPicker(
-    BuildContext context,
-    WidgetRef ref,
-    TransactionEditController notifier,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => Consumer(
-        builder: (context, ref, _) {
-          final colors = Theme.of(context).colorScheme;
-          final categoriesAsync = ref.watch(categoriesProvider);
-
-          return Container(
-            padding: const EdgeInsets.all(24),
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.7,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Seleccionar Categoría',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: colors.primary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Flexible(
-                  child: categoriesAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (err, stack) =>
-                        Text('Error loading categories: $err'),
-                    data: (categories) => GridView.builder(
-                      shrinkWrap: true,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                          ),
-                      itemCount: categories.length,
-                      itemBuilder: (context, index) {
-                        final cat = categories[index];
-                        return InkWell(
-                          onTap: () {
-                            notifier.setCategory(cat);
-                            Navigator.pop(context);
-                          },
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: colors.surfaceContainerLow,
-                                child: Icon(
-                                  cat.iconData,
-                                  color: colors.primary,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                cat.name,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colors.onSurface,
-                                ),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  void _showDeleteConfirmation(
-    BuildContext context,
-    TransactionEditController notifier,
-  ) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('¿Eliminar transacción?'),
-        content: const Text('Esta acción no se puede deshacer.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () async {
-              // Close dialog first
-              Navigator.pop(dialogContext);
-              // Close sheet before deleting to prevent flicker
-              Navigator.pop(context);
-              // Now delete (this will trigger reload and rebuild)
-              await notifier.delete();
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SheetContainer extends StatelessWidget {
-  final Widget child;
-  const _SheetContainer({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(top: false, child: child),
     );
   }
 }

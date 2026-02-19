@@ -7,7 +7,7 @@ part of 'transaction_edit_controller.dart';
 // **************************************************************************
 
 String _$transactionEditControllerHash() =>
-    r'6a5fae982eab8e0c5b7288d0fa0427301683b2aa';
+    r'fd7f3d29d11ddf1f7d0b0bf09fba4bf51eaeb194';
 
 /// Copied from Dart SDK
 class _SystemHash {

@@ -3,8 +3,11 @@ import 'package:finapp/data/providers/current_user_provider.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/quick_entry/quick_entry_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:uuid/uuid.dart';
 
 part 'quick_entry_controller.g.dart';
+
+const _uuid = Uuid();
 
 @riverpod
 class QuickEntryController extends _$QuickEntryController {
@@ -21,7 +24,6 @@ class QuickEntryController extends _$QuickEntryController {
       selectedCategory: firstCategory,
       split: firstCategory?.defaultSplit,
       selectedDate: DateTime.now(),
-      // other fields have defaults in QuickEntryState constructor or here
     );
   }
 
@@ -74,26 +76,34 @@ class QuickEntryController extends _$QuickEntryController {
     );
   }
 
-  Future<void> submit() async {
-    if (!state.hasValue || !state.value!.canSubmit) return;
+  /// Returns true if the transaction was saved successfully.
+  Future<bool> submit() async {
+    if (!state.hasValue || !state.value!.canSubmit) return false;
     final currentState = state.value!;
 
-    final tx = Transaction(
-      id: DateTime.now().toIso8601String(),
-      accountId: currentState.selectedAccount!.id,
-      categoryId: currentState.selectedCategory!.id,
-      amount: Money(currentState.amount),
-      date: currentState.selectedDate,
-      type: currentState.type,
-      description: currentState.description,
-    );
+    try {
+      final tx = Transaction(
+        id: _uuid.v4(),
+        accountId: currentState.selectedAccount!.id,
+        categoryId: currentState.selectedCategory!.id,
+        amount: Money(currentState.amount),
+        date: currentState.selectedDate,
+        type: currentState.type,
+        description: currentState.description,
+      );
 
-    final userId = ref.read(currentUserIdProvider);
-    await ref.read(financeRepositoryProvider).addTransaction(userId, tx);
+      final userId = ref.read(currentUserIdProvider);
+      await ref.read(financeRepositoryProvider).addTransaction(userId, tx);
 
-    // Silent reload to update lists without flicker
-    await ref.read(transactionsProvider.notifier).reload();
-    await ref.read(accountsProvider.notifier).reload();
-    await ref.read(budgetsProvider.notifier).reload();
+      // Silent reload to update lists without flicker
+      await ref.read(transactionsProvider.notifier).reload();
+      await ref.read(accountsProvider.notifier).reload();
+      await ref.read(budgetsProvider.notifier).reload();
+
+      return true;
+    } catch (e, stack) {
+      state = AsyncError(e, stack);
+      return false;
+    }
   }
 }

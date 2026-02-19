@@ -27,36 +27,49 @@ class AccountCardStack extends ConsumerStatefulWidget {
 
 class _AccountCardStackState extends ConsumerState<AccountCardStack>
     with SingleTickerProviderStateMixin {
-  int _currentIndex = 0;
+  // Only UI-local state: drag gesture.
   double _dragOffset = 0.0;
   bool _isDragging = false;
 
   @override
   Widget build(BuildContext context) {
     final accounts = widget.accounts;
-    final totalCards = 1 + accounts.length; // General + accounts
+    final totalCards = 1 + accounts.length;
+
+    // Watch the provider so the widget rebuilds when selection changes.
+    final selectedId = ref.watch(dashboardSelectedAccountProvider);
+
+    // Automatically reset selection when the selected account was deleted.
+    ref.listen<String?>(dashboardSelectedAccountProvider, (_, next) {
+      if (next != null && !accounts.any((a) => a.id == next)) {
+        ref
+            .read(dashboardSelectedAccountProvider.notifier)
+            .setSelectedAccount(null);
+      }
+    });
+
+    // Derive index: always valid, no clamping hacks needed.
+    final currentIndex = selectedId == null
+        ? 0
+        : () {
+            final idx = accounts.indexWhere((a) => a.id == selectedId);
+            return idx >= 0 ? idx + 1 : 0;
+          }();
 
     return GestureDetector(
       onVerticalDragStart: (_) {
-        setState(() {
-          _isDragging = true;
-        });
+        setState(() => _isDragging = true);
       },
       onVerticalDragUpdate: (details) {
-        setState(() {
-          _dragOffset += details.delta.dy;
-        });
+        setState(() => _dragOffset += details.delta.dy);
       },
       onVerticalDragEnd: (details) {
         final velocity = details.velocity.pixelsPerSecond.dy;
 
-        // Swipe up to next card
         if (_dragOffset < -50 || velocity < -500) {
-          _changeCard(_currentIndex + 1);
-        }
-        // Swipe down to previous card
-        else if (_dragOffset > 50 || velocity > 500) {
-          _changeCard(_currentIndex - 1);
+          _changeCard(currentIndex + 1, accounts);
+        } else if (_dragOffset > 50 || velocity > 500) {
+          _changeCard(currentIndex - 1, accounts);
         } else {
           _resetDrag();
         }
@@ -66,36 +79,33 @@ class _AccountCardStackState extends ConsumerState<AccountCardStack>
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // Only show current card and the next one
-            // Build in reverse order so top card is on top
-            if (_currentIndex < totalCards - 1)
-              _buildStackedCard(_currentIndex + 1, totalCards, accounts),
-            _buildStackedCard(_currentIndex, totalCards, accounts),
-
-            // Vertical pagination indicator
-            _buildPaginationIndicator(totalCards),
+            if (currentIndex < totalCards - 1)
+              _buildStackedCard(currentIndex + 1, currentIndex, accounts),
+            _buildStackedCard(currentIndex, currentIndex, accounts),
+            _buildPaginationIndicator(totalCards, currentIndex),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStackedCard(int index, int totalCards, List<Account> accounts) {
-    final isCurrentCard = index == _currentIndex;
-    final isNextCard = index == _currentIndex + 1;
+  Widget _buildStackedCard(
+    int index,
+    int currentIndex,
+    List<Account> accounts,
+  ) {
+    final isCurrentCard = index == currentIndex;
+    final isNextCard = index == currentIndex + 1;
 
-    // Calculate position for stacking effect
     double verticalOffset = 0;
     double horizontalPadding = 0;
     double opacity = 1.0;
 
     if (isNextCard) {
-      // Next card visible at TOP
       verticalOffset = -16.0;
       horizontalPadding = 12.0;
       opacity = 0.8;
     } else if (isCurrentCard && _isDragging) {
-      // Current card follows drag
       verticalOffset = _dragOffset * 0.5;
     }
 
@@ -116,7 +126,6 @@ class _AccountCardStackState extends ConsumerState<AccountCardStack>
 
   Widget _buildCard(int index, List<Account> accounts) {
     if (index == 0) {
-      // General card
       return AccountCard(
         account: null,
         balance: ref.watch(dashboardBalanceProvider),
@@ -129,7 +138,6 @@ class _AccountCardStackState extends ConsumerState<AccountCardStack>
         changePercentage: ref.watch(dashboardSpendingChangePercentageProvider),
       );
     } else {
-      // Account-specific card
       final account = accounts[index - 1];
       return AccountCard(
         account: account,
@@ -145,30 +153,25 @@ class _AccountCardStackState extends ConsumerState<AccountCardStack>
     }
   }
 
-  void _changeCard(int newIndex) {
-    // Make navigation circular
-    final accounts = widget.accounts;
+  void _changeCard(int newIndex, List<Account> accounts) {
     final totalCards = 1 + accounts.length;
 
-    // Wrap around
-    if (newIndex >= totalCards) {
-      newIndex = 0;
-    } else if (newIndex < 0) {
-      newIndex = totalCards - 1;
-    }
+    // Circular wrap-around
+    if (newIndex >= totalCards) newIndex = 0;
+    if (newIndex < 0) newIndex = totalCards - 1;
 
+    // Reset drag state
     setState(() {
-      _currentIndex = newIndex;
       _isDragging = false;
       _dragOffset = 0.0;
     });
 
-    // Update selected account
-    if (newIndex == 0) {
-      widget.onAccountChanged(null); // General
-    } else {
-      widget.onAccountChanged(accounts[newIndex - 1].id);
-    }
+    // Update the provider — single source of truth
+    final newAccountId = newIndex == 0 ? null : accounts[newIndex - 1].id;
+    ref
+        .read(dashboardSelectedAccountProvider.notifier)
+        .setSelectedAccount(newAccountId);
+    widget.onAccountChanged(newAccountId);
   }
 
   void _resetDrag() {
@@ -178,7 +181,7 @@ class _AccountCardStackState extends ConsumerState<AccountCardStack>
     });
   }
 
-  Widget _buildPaginationIndicator(int totalCards) {
+  Widget _buildPaginationIndicator(int totalCards, int currentIndex) {
     return Positioned(
       right: 8,
       top: 0,
@@ -200,7 +203,7 @@ class _AccountCardStackState extends ConsumerState<AccountCardStack>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: List.generate(totalCards, (index) {
-              final isActive = index == _currentIndex;
+              final isActive = index == currentIndex;
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: AnimatedContainer(

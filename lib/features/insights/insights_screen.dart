@@ -1,3 +1,4 @@
+import 'package:finapp/core/widgets/error_view.dart';
 import 'package:finapp/features/insights/insights_controller.dart';
 import 'package:finapp/features/insights/widgets/insights_time_selector.dart';
 import 'package:finapp/features/insights/widgets/spending_overview_card.dart';
@@ -42,7 +43,10 @@ class InsightsScreen extends ConsumerWidget {
           child: asyncState.when(
             skipLoadingOnReload: true, // Prevents flicker
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('Error: $err')),
+            error: (err, stack) => ErrorView(
+              error: err,
+              onRetry: () => ref.invalidate(insightsControllerProvider),
+            ),
             data: (state) => CustomScrollView(
               slivers: [
                 // Header
@@ -85,7 +89,20 @@ class InsightsScreen extends ConsumerWidget {
                           child: IconButton(
                             icon: const Icon(Icons.tune_rounded),
                             onPressed: () {
-                              // TODO: Open filter options
+                              // Period/tag filters are available via
+                              // the time selector and tag filter bar below
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                    'Usa el selector de período y las etiquetas para filtrar',
+                                  ),
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: const Duration(seconds: 3),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              );
                             },
                           ),
                         ),

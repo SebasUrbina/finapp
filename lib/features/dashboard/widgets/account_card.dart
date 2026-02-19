@@ -211,11 +211,11 @@ class AccountCard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildPeriodButton('A', PeriodFilter.year),
+          _buildPeriodButton('Año', PeriodFilter.year),
           const SizedBox(width: 3),
-          _buildPeriodButton('S', PeriodFilter.week),
+          _buildPeriodButton('Sem', PeriodFilter.week),
           const SizedBox(width: 3),
-          _buildPeriodButton('M', PeriodFilter.month),
+          _buildPeriodButton('Mes', PeriodFilter.month),
         ],
       ),
     );

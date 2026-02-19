@@ -1,3 +1,4 @@
+import 'package:finapp/core/widgets/error_view.dart';
 import 'package:finapp/data/providers/finance_providers.dart';
 import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/accounts/widgets/account_card_item.dart';
@@ -41,7 +42,10 @@ class AccountListScreen extends ConsumerWidget {
               skipLoadingOnReload:
                   true, // Prevents flicker during silent refresh
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('Error: $err')),
+              error: (err, stack) => ErrorView(
+                error: err,
+                onRetry: () => ref.invalidate(accountsProvider),
+              ),
               data: (accounts) => ListView.builder(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,

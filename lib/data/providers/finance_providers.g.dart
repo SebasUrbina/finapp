@@ -554,7 +554,7 @@ final categoriesProvider =
     );
 
 typedef _$Categories = AutoDisposeAsyncNotifier<List<Category>>;
-String _$tagsFamilyHash() => r'ac33fd62724e0bc55f00e592ad9a503b39f1e46e';
+String _$tagsFamilyHash() => r'cfcdba8dd1c4ef9f7b7bf60704c6c53415cb99ba';
 
 abstract class _$TagsFamily
     extends BuildlessAutoDisposeAsyncNotifier<List<Tag>> {

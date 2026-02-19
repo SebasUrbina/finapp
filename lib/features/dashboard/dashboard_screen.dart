@@ -1,4 +1,5 @@
 import 'package:finapp/domain/models/finance_models.dart';
+import 'package:finapp/core/widgets/error_view.dart';
 import 'package:finapp/features/dashboard/dashboard_controller.dart';
 import 'package:finapp/features/dashboard/dashboard_state.dart';
 import 'package:finapp/features/dashboard/widgets/recent_transactions_list.dart';
@@ -154,14 +155,14 @@ class DashboardScreen extends ConsumerWidget {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
+                // TODO: Evaluar si incorporar en versión final
                 // Financial Metrics Row
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: const SliverToBoxAdapter(
-                    child: FinancialMetricsRow(),
-                  ),
-                ),
-
+                // SliverPadding(
+                //   padding: const EdgeInsets.symmetric(horizontal: 16),
+                //   sliver: const SliverToBoxAdapter(
+                //     child: FinancialMetricsRow(),
+                //   ),
+                // ),
                 const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
                 // Recent Transactions Section
@@ -194,7 +195,10 @@ class DashboardScreen extends ConsumerWidget {
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],
             ),
-            error: (err, stack) => Center(child: Text('Error: $err')),
+            error: (err, stack) => ErrorView(
+              error: err,
+              onRetry: () => ref.invalidate(dashboardStateProvider),
+            ),
             loading: () => const Center(child: CircularProgressIndicator()),
           ),
         ),

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:finapp/domain/models/finance_models.dart';
 import 'package:finapp/features/auth/domain/auth_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -15,6 +14,7 @@ part 'auth_controller.g.dart';
 
 @Riverpod(keepAlive: true)
 class AuthController extends _$AuthController {
+  StreamSubscription<User?>? _authSub;
   Future<AuthState> _checkUserStatus(User user) async {
     try {
       // Check if user needs setup (no accounts)
@@ -50,11 +50,11 @@ class AuthController extends _$AuthController {
   FutureOr<AuthState> build() async {
     final authService = ref.watch(firebaseAuthServiceProvider);
 
-    // Subscribe to auth changes
-    final sub = authService.authStateChanges.listen((user) async {
-      // Avoid updating state if the notifier is disposed
-      // (Though keepAlive=true prevents early disposal, it's good practice)
+    // Cancel previous subscription to prevent duplicate listeners on rebuild
+    _authSub?.cancel();
 
+    // Subscribe to auth changes
+    _authSub = authService.authStateChanges.listen((user) async {
       if (user != null) {
         state = const AsyncValue.loading();
         state = await AsyncValue.guard(() => _checkUserStatus(user));
@@ -63,7 +63,7 @@ class AuthController extends _$AuthController {
       }
     });
 
-    ref.onDispose(() => sub.cancel());
+    ref.onDispose(() => _authSub?.cancel());
 
     // Initial check for current user
     final currentUser = authService.currentUser;

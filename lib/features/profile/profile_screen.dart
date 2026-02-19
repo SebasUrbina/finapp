@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'providers/profile_provider.dart';
 import 'widgets/profile_header.dart';
 import 'widgets/settings_widgets.dart';
@@ -36,7 +37,47 @@ class ProfileScreen extends ConsumerWidget {
                   SettingsTile(
                     icon: Icons.key_outlined,
                     title: 'Cambiar Contraseña',
-                    onTap: () {},
+                    onTap: () async {
+                      final user = FirebaseAuth.instance.currentUser;
+                      final email = user?.email;
+                      if (email == null) return;
+                      try {
+                        await FirebaseAuth.instance.sendPasswordResetEmail(
+                          email: email,
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Email de restablecimiento enviado a $email',
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: Colors.green.shade600,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text(
+                                'Error al enviar el email. Intenta de nuevo.',
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.error,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    },
                   ),
                   SettingsTile(
                     icon: Icons.account_balance_outlined,

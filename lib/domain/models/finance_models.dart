@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:finapp/core/constants/category_icons.dart';
 
+/// Sentinel value for copyWith nullable clearing
+const _sentinel = Object();
+
+/// Safe enum deserialization — supports both legacy int and new string formats.
+T _enumByName<T extends Enum>(List<T> values, dynamic raw, T fallback) {
+  if (raw is String) {
+    return values.firstWhere((e) => e.name == raw, orElse: () => fallback);
+  }
+  if (raw is int && raw >= 0 && raw < values.length) {
+    return values[raw];
+  }
+  return fallback;
+}
+
 enum CategoryIcon {
   home,
   shoppingCart,
@@ -56,14 +70,16 @@ class Category {
     String? name,
     CategoryIcon? icon,
     List<String>? tagIds,
-    Split? defaultSplit,
+    Object? defaultSplit = _sentinel,
   }) {
     return Category(
       id: id ?? this.id,
       name: name ?? this.name,
       icon: icon ?? this.icon,
       tagIds: tagIds ?? this.tagIds,
-      defaultSplit: defaultSplit ?? this.defaultSplit,
+      defaultSplit: defaultSplit == _sentinel
+          ? this.defaultSplit
+          : defaultSplit as Split?,
     );
   }
 
@@ -71,7 +87,7 @@ class Category {
     return {
       'id': id,
       'name': name,
-      'icon': icon.index,
+      'icon': icon.name,
       'tagIds': tagIds,
       'defaultSplit': defaultSplit?.toMap(),
     };
@@ -81,7 +97,7 @@ class Category {
     return Category(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
-      icon: CategoryIcon.values[map['icon'] as int? ?? 0],
+      icon: _enumByName(CategoryIcon.values, map['icon'], CategoryIcon.home),
       tagIds: List<String>.from(map['tagIds'] ?? []),
       defaultSplit: map['defaultSplit'] != null
           ? Split.fromMap(map['defaultSplit'])
@@ -110,14 +126,14 @@ class Tag {
   });
 
   Map<String, dynamic> toMap() {
-    return {'id': id, 'name': name, 'type': type.index, 'color': color.value};
+    return {'id': id, 'name': name, 'type': type.name, 'color': color.value};
   }
 
   factory Tag.fromMap(Map<String, dynamic> map) {
     return Tag(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
-      type: TagType.values[map['type'] as int? ?? 0],
+      type: _enumByName(TagType.values, map['type'], TagType.budgetGroup),
       color: Color(map['color'] as int? ?? 0xFF000000),
     );
   }
@@ -170,11 +186,11 @@ class Transaction {
     TransactionType? type,
     DateTime? date,
     String? accountId,
-    String? toAccountId,
-    String? categoryId,
-    String? description,
-    Split? split,
-    String? recurringRuleId,
+    Object? toAccountId = _sentinel,
+    Object? categoryId = _sentinel,
+    Object? description = _sentinel,
+    Object? split = _sentinel,
+    Object? recurringRuleId = _sentinel,
   }) {
     return Transaction(
       id: id ?? this.id,
@@ -182,11 +198,19 @@ class Transaction {
       type: type ?? this.type,
       date: date ?? this.date,
       accountId: accountId ?? this.accountId,
-      toAccountId: toAccountId ?? this.toAccountId,
-      categoryId: categoryId ?? this.categoryId,
-      description: description ?? this.description,
-      split: split ?? this.split,
-      recurringRuleId: recurringRuleId ?? this.recurringRuleId,
+      toAccountId: toAccountId == _sentinel
+          ? this.toAccountId
+          : toAccountId as String?,
+      categoryId: categoryId == _sentinel
+          ? this.categoryId
+          : categoryId as String?,
+      description: description == _sentinel
+          ? this.description
+          : description as String?,
+      split: split == _sentinel ? this.split : split as Split?,
+      recurringRuleId: recurringRuleId == _sentinel
+          ? this.recurringRuleId
+          : recurringRuleId as String?,
     );
   }
 
@@ -194,7 +218,7 @@ class Transaction {
     return {
       'id': id,
       'amount': amount.value,
-      'type': type.index,
+      'type': type.name,
       'date': date.millisecondsSinceEpoch,
       'accountId': accountId,
       'toAccountId': toAccountId,
@@ -209,7 +233,11 @@ class Transaction {
     return Transaction(
       id: map['id'] ?? '',
       amount: Money((map['amount'] as num?)?.toDouble() ?? 0.0),
-      type: TransactionType.values[map['type'] as int? ?? 0],
+      type: _enumByName(
+        TransactionType.values,
+        map['type'],
+        TransactionType.expense,
+      ),
       date: DateTime.fromMillisecondsSinceEpoch(map['date'] as int? ?? 0),
       accountId: map['accountId'] ?? '',
       toAccountId: map['toAccountId'],
@@ -243,14 +271,14 @@ class Split {
 
   Map<String, dynamic> toMap() {
     return {
-      'type': type.index,
+      'type': type.name,
       'participants': participants.map((x) => x.toMap()).toList(),
     };
   }
 
   factory Split.fromMap(Map<String, dynamic> map) {
     return Split(
-      type: SplitType.values[map['type'] as int? ?? 0],
+      type: _enumByName(SplitType.values, map['type'], SplitType.equal),
       participants: List<SplitParticipant>.from(
         (map['participants'] as List<dynamic>? ?? []).map<SplitParticipant>(
           (x) => SplitParticipant.fromMap(x as Map<String, dynamic>),
@@ -326,7 +354,7 @@ class Budget {
       'id': id,
       'target': targetMap,
       'limit': limit.value,
-      'period': period.index,
+      'period': period.name,
     };
   }
 
@@ -344,7 +372,11 @@ class Budget {
       id: map['id'] ?? '',
       target: target,
       limit: Money((map['limit'] as num?)?.toDouble() ?? 0.0),
-      period: BudgetPeriod.values[map['period'] as int? ?? 0],
+      period: _enumByName(
+        BudgetPeriod.values,
+        map['period'],
+        BudgetPeriod.monthly,
+      ),
     );
   }
 }
@@ -451,9 +483,10 @@ class Account {
     return {
       'id': id,
       'name': name,
-      'type': type.index,
+      'type': type.name,
       'balance': balance.value,
       'icon': icon?.codePoint,
+      'iconFontFamily': icon?.fontFamily,
       'color': color?.value,
       'creditInfo': creditInfo?.toMap(),
     };
@@ -463,10 +496,13 @@ class Account {
     return Account(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
-      type: AccountType.values[map['type'] as int? ?? 0],
+      type: _enumByName(AccountType.values, map['type'], AccountType.checking),
       balance: Money((map['balance'] as num?)?.toDouble() ?? 0.0),
       icon: map['icon'] != null
-          ? IconData(map['icon'] as int, fontFamily: 'MaterialIcons')
+          ? IconData(
+              map['icon'] as int,
+              fontFamily: map['iconFontFamily'] as String? ?? 'MaterialIcons',
+            )
           : null,
       color: map['color'] != null ? Color(map['color'] as int) : null,
       creditInfo: map['creditInfo'] != null
@@ -530,18 +566,18 @@ class RecurringRule {
     return {
       'id': id,
       'amount': amount.value,
-      'type': type.index,
+      'type': type.name,
       'accountId': accountId,
       'toAccountId': toAccountId,
       'categoryId': categoryId,
       'description': description,
       'split': split?.toMap(),
-      'frequency': frequency.index,
+      'frequency': frequency.name,
       'interval': interval,
       'startDate': startDate.millisecondsSinceEpoch,
       'endDate': endDate?.millisecondsSinceEpoch,
       'maxOccurrences': maxOccurrences,
-      'status': status.index,
+      'status': status.name,
       'lastGeneratedAt': lastGeneratedAt?.millisecondsSinceEpoch,
       'generatedCount': generatedCount,
     };
@@ -551,13 +587,21 @@ class RecurringRule {
     return RecurringRule(
       id: map['id'] ?? '',
       amount: Money((map['amount'] as num?)?.toDouble() ?? 0.0),
-      type: TransactionType.values[map['type'] as int? ?? 0],
+      type: _enumByName(
+        TransactionType.values,
+        map['type'],
+        TransactionType.expense,
+      ),
       accountId: map['accountId'] ?? '',
       toAccountId: map['toAccountId'],
       categoryId: map['categoryId'],
       description: map['description'],
       split: map['split'] != null ? Split.fromMap(map['split']) : null,
-      frequency: RecurrenceFrequency.values[map['frequency'] as int? ?? 0],
+      frequency: _enumByName(
+        RecurrenceFrequency.values,
+        map['frequency'],
+        RecurrenceFrequency.monthly,
+      ),
       interval: map['interval'] as int? ?? 1,
       startDate: DateTime.fromMillisecondsSinceEpoch(
         map['startDate'] as int? ?? 0,
@@ -566,7 +610,11 @@ class RecurringRule {
           ? DateTime.fromMillisecondsSinceEpoch(map['endDate'] as int)
           : null,
       maxOccurrences: map['maxOccurrences'] as int?,
-      status: RecurringStatus.values[map['status'] as int? ?? 0],
+      status: _enumByName(
+        RecurringStatus.values,
+        map['status'],
+        RecurringStatus.active,
+      ),
       lastGeneratedAt: map['lastGeneratedAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['lastGeneratedAt'] as int)
           : null,

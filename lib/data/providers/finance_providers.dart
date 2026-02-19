@@ -159,21 +159,18 @@ class TagsFamily extends _$TagsFamily {
   }
 
   Future<void> addTag(Tag tag) async {
-    final userId = ref.read(currentUserIdProvider);
     final repo = ref.read(financeRepositoryProvider);
     await repo.addTag(userId, tag);
     ref.invalidateSelf();
   }
 
   Future<void> updateTag(Tag tag) async {
-    final userId = ref.read(currentUserIdProvider);
     final repo = ref.read(financeRepositoryProvider);
     await repo.updateTag(userId, tag);
     ref.invalidateSelf();
   }
 
   Future<void> deleteTag(String tagId) async {
-    final userId = ref.read(currentUserIdProvider);
     final repo = ref.read(financeRepositoryProvider);
     await repo.deleteTag(userId, tagId);
     ref.invalidateSelf();

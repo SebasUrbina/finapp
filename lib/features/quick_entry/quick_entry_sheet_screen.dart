@@ -1,3 +1,6 @@
+import 'package:finapp/core/widgets/app_pickers.dart';
+import 'package:finapp/core/widgets/error_view.dart';
+import 'package:finapp/core/widgets/sheet_container.dart';
 import 'package:finapp/data/providers/finance_providers.dart';
 import 'package:finapp/features/quick_entry/quick_entry_controller.dart';
 import 'package:finapp/features/quick_entry/widgets/account_category_row.dart';
@@ -12,16 +15,70 @@ import 'package:finapp/features/quick_entry/widgets/type_switcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class QuickEntrySheet extends ConsumerWidget {
+class QuickEntrySheet extends ConsumerStatefulWidget {
   const QuickEntrySheet({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Providers
+  ConsumerState<QuickEntrySheet> createState() => _QuickEntrySheetState();
+}
+
+class _QuickEntrySheetState extends ConsumerState<QuickEntrySheet> {
+  bool _isSubmitting = false;
+
+  Future<void> _handleSubmit(BuildContext context) async {
+    if (_isSubmitting) return;
+    setState(() => _isSubmitting = true);
+
+    final notifier = ref.read(quickEntryControllerProvider.notifier);
+    final success = await notifier.submit();
+
+    if (!context.mounted) return;
+
+    if (success) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Text('Transacción guardada'),
+            ],
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.green.shade600,
+          duration: const Duration(seconds: 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } else {
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Text('Error al guardar. Intenta de nuevo.'),
+            ],
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Theme.of(context).colorScheme.error,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final asyncState = ref.watch(quickEntryControllerProvider);
     final notifier = ref.read(quickEntryControllerProvider.notifier);
 
-    // Validation Providers
     final accountsAsync = ref.watch(accountsProvider);
     final categoriesAsync = ref.watch(categoriesProvider);
 
@@ -34,7 +91,7 @@ class QuickEntrySheet extends ConsumerWidget {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       duration: const Duration(milliseconds: 200),
-      child: _SheetContainer(
+      child: SheetContainer(
         child: isLoadingData
             ? const Center(
                 child: Padding(
@@ -43,7 +100,7 @@ class QuickEntrySheet extends ConsumerWidget {
                 ),
               )
             : (!hasAccounts || !hasCategories)
-            ? _buildBlockingUI(context, ref, hasAccounts, hasCategories)
+            ? _buildBlockingUI(context, hasAccounts, hasCategories)
             : asyncState.when(
                 loading: () => const Center(
                   child: Padding(
@@ -51,7 +108,10 @@ class QuickEntrySheet extends ConsumerWidget {
                     child: CircularProgressIndicator(),
                   ),
                 ),
-                error: (err, stack) => Center(child: Text('Error: $err')),
+                error: (err, stack) => ErrorView(
+                  error: err,
+                  onRetry: () => ref.invalidate(quickEntryControllerProvider),
+                ),
                 data: (state) => SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -88,10 +148,16 @@ class QuickEntrySheet extends ConsumerWidget {
                             child: AccountCategoryRow(
                               selectedAccount: state.selectedAccount,
                               selectedCategory: state.selectedCategory,
-                              onAccountTap: () =>
-                                  _showAccountPicker(context, ref),
-                              onCategoryTap: () =>
-                                  _showCategoryPicker(context, ref),
+                              onAccountTap: () => showAccountPicker(
+                                context,
+                                ref,
+                                onSelected: notifier.setAccount,
+                              ),
+                              onCategoryTap: () => showCategoryPicker(
+                                context,
+                                ref,
+                                onSelected: notifier.setCategory,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -118,13 +184,9 @@ class QuickEntrySheet extends ConsumerWidget {
                         label: state.isRecurring
                             ? 'Guardar Recurrente'
                             : 'Guardar Transacción',
+                        isLoading: _isSubmitting,
                         onPressed: state.canSubmit
-                            ? () async {
-                                // Close modal first to prevent flicker
-                                Navigator.pop(context);
-                                // Now submit (this will trigger reload and rebuild)
-                                await notifier.submit();
-                              }
+                            ? () => _handleSubmit(context)
                             : null,
                       ),
                     ],
@@ -137,7 +199,6 @@ class QuickEntrySheet extends ConsumerWidget {
 
   Widget _buildBlockingUI(
     BuildContext context,
-    WidgetRef ref,
     bool hasAccounts,
     bool hasCategories,
   ) {
@@ -166,7 +227,6 @@ class QuickEntrySheet extends ConsumerWidget {
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 24),
-          // Requirements checklist
           RequirementItem(
             icon: Icons.account_balance_wallet,
             label: 'Al menos una cuenta',
@@ -179,14 +239,10 @@ class QuickEntrySheet extends ConsumerWidget {
             isCompleted: hasCategories,
           ),
           const SizedBox(height: 32),
-          // Action button
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                // User will need to create accounts/categories from dashboard
-              },
+              onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.arrow_back),
               label: const Text('Volver al inicio'),
               style: FilledButton.styleFrom(
@@ -204,192 +260,6 @@ class QuickEntrySheet extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  void _showAccountPicker(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => Consumer(
-        builder: (context, ref, _) {
-          final colors = Theme.of(context).colorScheme;
-          final accountsAsync = ref.watch(accountsProvider);
-
-          return Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Seleccionar Cuenta',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: colors.primary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Flexible(
-                  child: accountsAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (err, stack) => Text('Error loading accounts: $err'),
-                    data: (accounts) => ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: accounts.length,
-                      itemBuilder: (context, index) {
-                        final account = accounts[index];
-                        return ListTile(
-                          leading: Icon(
-                            account.icon ?? Icons.account_balance_wallet,
-                            color: account.color ?? colors.primary,
-                          ),
-                          title: Text(
-                            account.name,
-                            style: TextStyle(color: colors.onSurface),
-                          ),
-                          subtitle: Text(
-                            r'$' + account.balance.value.toStringAsFixed(0),
-                            style: TextStyle(color: colors.onSurface),
-                          ),
-                          onTap: () {
-                            ref
-                                .read(quickEntryControllerProvider.notifier)
-                                .setAccount(account);
-                            Navigator.pop(context);
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  void _showCategoryPicker(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => Consumer(
-        builder: (context, ref, _) {
-          final colors = Theme.of(context).colorScheme;
-          final categoriesAsync = ref.watch(categoriesProvider);
-
-          return Container(
-            padding: const EdgeInsets.all(24),
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.7,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Seleccionar Categoría',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: colors.primary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Flexible(
-                  child: categoriesAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (err, stack) =>
-                        Text('Error loading categories: $err'),
-                    data: (categories) => GridView.builder(
-                      shrinkWrap: true,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                          ),
-                      itemCount: categories.length,
-                      itemBuilder: (context, index) {
-                        final cat = categories[index];
-                        return InkWell(
-                          onTap: () {
-                            ref
-                                .read(quickEntryControllerProvider.notifier)
-                                .setCategory(cat);
-                            Navigator.pop(context);
-                          },
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: colors.surfaceContainerLow,
-                                child: Icon(
-                                  cat.iconData,
-                                  color: colors.primary,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                cat.name,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colors.onSurface,
-                                ),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _SheetContainer extends StatelessWidget {
-  final Widget child;
-  const _SheetContainer({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(top: false, child: child),
     );
   }
 }
